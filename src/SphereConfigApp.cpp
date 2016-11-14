@@ -4,6 +4,7 @@
 #include "cinder/Camera.h"
 #include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
+#include "cinder/Display.h"
 
 #include "buildmesh.h"
 
@@ -121,7 +122,10 @@ class SphereConfigApp : public App {
 #define DISTORTION_TEX_BIND_POINT 0
 
 void SphereConfigApp::prepSettings(Settings * settings) {
-	settings->setFullScreen();
+	ivec2 displaySize = Display::getMainDisplay()->getSize();
+	int windowSide = min(displaySize.x, displaySize.y);
+	settings->setWindowSize(windowSide, windowSide);
+//	settings->setFullScreen(); // someday...
 	settings->setTitle("Sphere Configuration");
 	settings->setHighDensityDisplayEnabled();
 }
@@ -135,7 +139,7 @@ void SphereConfigApp::setup()
 
 	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, 50)));
 
-	mParams->addParam("Camera FOV", & mCameraFov).min(60.f).max(180.f).precision(3).step(1.0f);
+	mParams->addParam("Camera FOV", & mCameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
 	mParams->addParam("Distortion Power", & mDistortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
 
 	mGraticuleBaseMesh = makeGraticule(vec3(0, 0, 0), 1.0);
