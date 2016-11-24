@@ -1,3 +1,6 @@
+#include <iostream>
+#include <fstream>
+
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
@@ -5,6 +8,7 @@
 #include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
 #include "cinder/Display.h"
+#include "cinder/Json.h"
 
 #include "buildmesh.h"
 
@@ -104,6 +108,9 @@ class SphereConfigApp : public App {
 	void update() override;
 	void draw() override;
 
+	JsonTree loadParams();
+	void saveParams();
+
 	CameraPersp mCamera;
 	CameraUi mUiCamera;
 
@@ -117,6 +124,8 @@ class SphereConfigApp : public App {
 
 	gl::FboRef mDistortionFbo;
 	gl::GlslProgRef mDistortionShader;
+
+	string mParamsLoc = "savedParams.json";
 };
 
 #define DISTORTION_TEX_BIND_POINT 0
@@ -132,6 +141,14 @@ void SphereConfigApp::prepSettings(Settings * settings) {
 
 void SphereConfigApp::setup()
 {
+	try {
+		JsonTree appParams = loadParams();
+		mCameraFov = appParams.getChild("fov").getValue<float>();
+		mDistortionPower = appParams.getChild("distortionPower").getValue<float>();
+	} catch (ResourceLoadExc exc) {
+		console() << "Failed to load parameters - they probably don't exist yet" << std::endl;
+	}
+
 	mCamera.lookAt(vec3(0, 1, 0), vec3(0, 0, 0), vec3(0, 0, 1));
 	// mCamera.setAspectRatio(1); // someday...
 	mCamera.setAspectRatio(getWindowAspectRatio());
@@ -157,6 +174,8 @@ void SphereConfigApp::mouseDown( MouseEvent event )
 void SphereConfigApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_ESCAPE) {
 		quit();
+	} else if (event.getCode() == KeyEvent::KEY_SPACE) {
+		saveParams();
 	}
 }
 
@@ -196,6 +215,32 @@ void SphereConfigApp::draw()
 	}
 
 	mParams->draw();
+}
+
+JsonTree SphereConfigApp::loadParams() {
+	return JsonTree(loadResource(mParamsLoc));
+}
+
+void SphereConfigApp::saveParams() {
+	JsonTree appParams;
+
+	appParams.addChild(JsonTree("fov", mCameraFov));
+	appParams.addChild(JsonTree("distortionPower", mDistortionPower));
+
+	string serializedParams = appParams.serialize();
+	std::ofstream writeFile;
+
+	string appOwnFile = getResourcePath(mParamsLoc).string();
+	writeFile.open(appOwnFile);
+	std::cout << "writing params to: " << appOwnFile << std::endl;
+	writeFile << serializedParams;
+	writeFile.close();
+
+	string repoFile = fs::canonical("../../../resources/" + mParamsLoc).string();
+	writeFile.open(repoFile);
+	std::cout << "writing params to: " << repoFile << std::endl;
+	writeFile << serializedParams;
+	writeFile.close();
 }
 
 CINDER_APP( SphereConfigApp, RendererGl, & SphereConfigApp::prepSettings )
