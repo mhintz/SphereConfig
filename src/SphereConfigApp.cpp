@@ -13,9 +13,25 @@
 #include "buildmesh.h"
 #include "MeshHelpers.h"
 
+#include "Projector.h"
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+
+enum class ConfigMode {
+	Interior,
+	Exterior
+};
+
+struct InteriorConfig {
+	float cameraFov = 140.f;
+	float distortionPower = 1.0f;
+};
+
+struct ExteriorConfig {
+	vector<Projector> projectors;
+};
 
 class SphereConfigApp : public App {
   public:
@@ -30,60 +46,84 @@ class SphereConfigApp : public App {
 	JsonTree loadParams();
 	void saveParams();
 
-	CameraPersp mCamera;
-	CameraUi mUiCamera;
-
-	float mCameraFov = 140.f;
-	float mDistortionPower = 1.0f;
-
 	params::InterfaceGlRef mParams;
 
-	bmesh::MeshRef mGraticuleBaseMesh;
+	ConfigMode mConfigMode = ConfigMode::Exterior;
+
+	CameraPersp mInteriorCamera;
+
+	CameraPersp mExteriorCamera;
+	CameraUi mExteriorUiCamera;
+
+	InteriorConfig mInteriorConfig;
+	ExteriorConfig mExteriorConfig;
+
 	gl::VboMeshRef mGraticuleMesh;
 
-	gl::FboRef mDistortionFbo;
-	gl::GlslProgRef mDistortionShader;
+	gl::FboRef mInteriorDistortionFbo;
+	gl::GlslProgRef mInteriorDistortionShader;
 
 	string mParamsLoc = "savedParams.json";
 };
 
-#define DISTORTION_TEX_BIND_POINT 0
+#define INTERIOR_DISTORTION_TEX_BIND_POINT 0
 
 void SphereConfigApp::prepSettings(Settings * settings) {
 	ivec2 displaySize = Display::getMainDisplay()->getSize();
 	int windowSide = min(displaySize.x, displaySize.y);
 	settings->setWindowSize(windowSide, windowSide);
-//	settings->setFullScreen(); // someday...
+	// settings->setFullScreen(); // someday...
 	settings->setTitle("Sphere Configuration");
 	settings->setHighDensityDisplayEnabled();
 }
 
 void SphereConfigApp::setup()
 {
+	// Load parameters from saved file
 	try {
 		JsonTree appParams = loadParams();
-		mCameraFov = appParams.getChild("fov").getValue<float>();
-		mDistortionPower = appParams.getChild("distortionPower").getValue<float>();
+		mInteriorConfig.cameraFov = appParams.getChild("fov").getValue<float>();
+		mInteriorConfig.distortionPower = appParams.getChild("distortionPower").getValue<float>();
 	} catch (ResourceLoadExc exc) {
 		console() << "Failed to load parameters - they probably don't exist yet" << std::endl;
 	}
 
-	mCamera.lookAt(vec3(0, 1, 0), vec3(0, 0, 0), vec3(0, 0, 1));
-	// mCamera.setAspectRatio(1); // someday...
-	mCamera.setAspectRatio(getWindowAspectRatio());
-	// mUiCamera = CameraUi(&mCamera, getWindow());
-
+	// Setup params
 	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, 50)));
 
-	mParams->addParam("Camera FOV", & mCameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
-	mParams->addParam("Distortion Power", & mDistortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
+	mParams->addParam("Configuration Mode", {
+		"Internal Config",
+		"External Config"
+	}, [this] (int cfigMode) {
+		if (cfigMode == 0) { mConfigMode = ConfigMode::Interior; }
+		else if (cfigMode == 1) { mConfigMode = ConfigMode::Exterior; }
+	}, [this] () {
+		if (mConfigMode == ConfigMode::Interior) { return 0; }
+		else if (mConfigMode == ConfigMode::Exterior) { return 1; }
+	});
 
-	mGraticuleBaseMesh = bmesh::makeGraticule(vec3(0, 0, 0), 1.0);
-	mGraticuleMesh = bmeshToVBOMesh(mGraticuleBaseMesh);
+	mParams->addParam("Camera FOV", & mInteriorConfig.cameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
+	mParams->addParam("Distortion Power", & mInteriorConfig.distortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
 
-	mDistortionFbo = gl::Fbo::create(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
-	mDistortionShader = gl::GlslProg::create(loadAsset("passThrough_v.glsl"), loadAsset("distortion_f.glsl"));
-	mDistortionShader->uniform("uTex0", DISTORTION_TEX_BIND_POINT);
+	// ^^^^ Have to set up the params before the CameraUI, or else things get screwy
+
+	// Set up two possible cameras
+	mInteriorCamera.lookAt(vec3(0, 1, 0), vec3(0, 0, 0), vec3(0, 0, 1));
+	mInteriorCamera.setAspectRatio(getWindowAspectRatio());
+	// mInteriorCamera.setAspectRatio(1); // someday...
+
+	mExteriorCamera.lookAt(vec3(0, 0, 4), vec3(0), vec3(0, 1, 0));
+	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
+	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
+
+	// Setup mesh
+	auto baseMesh = bmesh::makeGraticule(vec3(0, 0, 0), 1.0);
+	mGraticuleMesh = bmeshToVBOMesh(baseMesh);
+
+	// Set up interior distortion rendering
+	mInteriorDistortionFbo = gl::Fbo::create(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
+	mInteriorDistortionShader = gl::GlslProg::create(loadAsset("passThrough_v.glsl"), loadAsset("distortion_f.glsl"));
+	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
 }
 
 void SphereConfigApp::mouseDown( MouseEvent event )
@@ -100,37 +140,36 @@ void SphereConfigApp::keyDown(KeyEvent event) {
 
 void SphereConfigApp::update()
 {
-	mCamera.setFov(mCameraFov);
-
-	mDistortionShader->uniform("distortionPow", mDistortionPower);
+	mInteriorCamera.setFov(mInteriorConfig.cameraFov);
+	mInteriorDistortionShader->uniform("distortionPow", mInteriorConfig.distortionPower);
 }
 
 void SphereConfigApp::draw()
 {
-	{
-		gl::ScopedFramebuffer scpFB(mDistortionFbo);
+	if (mConfigMode == ConfigMode::Interior) {	
+		{
+			gl::ScopedFramebuffer scpFB(mInteriorDistortionFbo);
+			gl::clear(Color(0, 0, 0));
+			gl::ScopedMatrices scpMat;
+			gl::setMatrices(mInteriorCamera);
+			gl::draw(mGraticuleMesh);
+		}
 
-		gl::clear(Color(0, 0, 0));
-
-		gl::ScopedMatrices scpMat;
-
-		gl::setMatrices(mCamera);
-
-		gl::draw(mGraticuleMesh);
-	}
-
-	{
-		gl::clear(Color(0, 0, 0));
-
-		gl::ScopedMatrices scpMat;
-
-		gl::setMatricesWindow(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
-
-		gl::ScopedGlslProg scpShader(mDistortionShader);
-
-		gl::ScopedTextureBind scpTex(mDistortionFbo->getColorTexture(), DISTORTION_TEX_BIND_POINT);
-
-		gl::drawSolidRect(toPixels(getWindowBounds()));
+		{
+			gl::clear(Color(0, 0, 0));
+			gl::ScopedMatrices scpMat;
+			gl::setMatricesWindow(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
+			gl::ScopedGlslProg scpShader(mInteriorDistortionShader);
+			gl::ScopedTextureBind scpTex(mInteriorDistortionFbo->getColorTexture(), INTERIOR_DISTORTION_TEX_BIND_POINT);
+			gl::drawSolidRect(toPixels(getWindowBounds()));
+		}
+	} else if (mConfigMode == ConfigMode::Exterior) {
+		{
+			gl::clear(Color(0, 0, 0));
+			gl::ScopedMatrices scpMat;
+			gl::setMatrices(mExteriorCamera);
+			gl::draw(mGraticuleMesh);
+		}
 	}
 
 	mParams->draw();
@@ -143,8 +182,8 @@ JsonTree SphereConfigApp::loadParams() {
 void SphereConfigApp::saveParams() {
 	JsonTree appParams;
 
-	appParams.addChild(JsonTree("fov", mCameraFov));
-	appParams.addChild(JsonTree("distortionPower", mDistortionPower));
+	appParams.addChild(JsonTree("fov", mInteriorConfig.cameraFov));
+	appParams.addChild(JsonTree("distortionPower", mInteriorConfig.distortionPower));
 
 	string serializedParams = appParams.serialize();
 	std::ofstream writeFile;
