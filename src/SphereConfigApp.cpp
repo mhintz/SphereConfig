@@ -109,7 +109,7 @@ void SphereConfigApp::setup()
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
 	mSolidSphereMesh = gl::VboMesh::create(geom::Sphere().center(vec3(0, -1, 0)).radius(1.0f), { geom::POSITION });
-	mZBiasShader = gl::GlslProg::create(loadAsset("zBias_v.glsl"), loadAsset("passThrough_f.glsl"));
+	mZBiasShader = gl::GlslProg::create(loadResource("zBias_v.glsl"), loadResource("passThrough_f.glsl"));
 
 	// Interior view
 	ivec2 displaySize = toPixels(getWindowSize());
@@ -120,7 +120,7 @@ void SphereConfigApp::setup()
 
 	// Set up interior distortion rendering
 	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
-	mInteriorDistortionShader = gl::GlslProg::create(loadAsset("passThrough_v.glsl"), loadAsset("distortion_f.glsl"));
+	mInteriorDistortionShader = gl::GlslProg::create(loadResource("passThrough_v.glsl"), loadResource("distortion_f.glsl"));
 	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
 }
 

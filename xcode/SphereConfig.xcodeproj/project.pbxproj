@@ -21,6 +21,10 @@
 		94357166F1B2424686BFA6B0 /* SphereConfigApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BA37B80FE54D4BBCAF0F9BC2 /* SphereConfigApp.cpp */; };
 		EF0FC1221DF0F89E00AA0EA6 /* Projector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF0FC1201DF0F89E00AA0EA6 /* Projector.cpp */; };
 		EF0FC1281DF0FA3600AA0EA6 /* CoreMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF0FC1241DF0FA3600AA0EA6 /* CoreMath.cpp */; };
+		EF0FC1321DF4D87C00AA0EA6 /* distortion_f.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC12E1DF4D87C00AA0EA6 /* distortion_f.glsl */; };
+		EF0FC1331DF4D87C00AA0EA6 /* passThrough_f.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC12F1DF4D87C00AA0EA6 /* passThrough_f.glsl */; };
+		EF0FC1341DF4D87C00AA0EA6 /* passThrough_v.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC1301DF4D87C00AA0EA6 /* passThrough_v.glsl */; };
+		EF0FC1351DF4D87C00AA0EA6 /* zBias_v.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC1311DF4D87C00AA0EA6 /* zBias_v.glsl */; };
 		EF6936A31DE75DE40010239C /* savedParams.json in Resources */ = {isa = PBXBuildFile; fileRef = EF6936A21DE75DE40010239C /* savedParams.json */; };
 		EF7B8F4D1DEC8C73008D2A73 /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F451DEC8C73008D2A73 /* Mesh.cpp */; };
 		EF7B8F4E1DEC8C73008D2A73 /* MeshBuilds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F471DEC8C73008D2A73 /* MeshBuilds.cpp */; };
@@ -58,6 +62,10 @@
 		EF0FC1251DF0FA3600AA0EA6 /* CoreMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreMath.h; path = "../../../cinder/blocks/core-util/CoreMath.h"; sourceTree = "<group>"; };
 		EF0FC1261DF0FA3600AA0EA6 /* Gradient.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Gradient.hpp; path = "../../../cinder/blocks/core-util/Gradient.hpp"; sourceTree = "<group>"; };
 		EF0FC1271DF0FA3600AA0EA6 /* Item.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Item.hpp; path = "../../../cinder/blocks/core-util/Item.hpp"; sourceTree = "<group>"; };
+		EF0FC12E1DF4D87C00AA0EA6 /* distortion_f.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = distortion_f.glsl; path = ../resources/distortion_f.glsl; sourceTree = "<group>"; };
+		EF0FC12F1DF4D87C00AA0EA6 /* passThrough_f.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = passThrough_f.glsl; path = ../resources/passThrough_f.glsl; sourceTree = "<group>"; };
+		EF0FC1301DF4D87C00AA0EA6 /* passThrough_v.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = passThrough_v.glsl; path = ../resources/passThrough_v.glsl; sourceTree = "<group>"; };
+		EF0FC1311DF4D87C00AA0EA6 /* zBias_v.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = zBias_v.glsl; path = ../resources/zBias_v.glsl; sourceTree = "<group>"; };
 		EF6936A21DE75DE40010239C /* savedParams.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = savedParams.json; path = ../resources/savedParams.json; sourceTree = "<group>"; };
 		EF7B8F431DEC8C73008D2A73 /* buildmesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = buildmesh.h; path = ../../../cpp/buildmesh/buildmesh.h; sourceTree = "<group>"; };
 		EF7B8F451DEC8C73008D2A73 /* Mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mesh.cpp; path = ../../../cpp/buildmesh/Mesh.cpp; sourceTree = "<group>"; };
@@ -177,6 +185,10 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				EF0FC12E1DF4D87C00AA0EA6 /* distortion_f.glsl */,
+				EF0FC12F1DF4D87C00AA0EA6 /* passThrough_f.glsl */,
+				EF0FC1301DF4D87C00AA0EA6 /* passThrough_v.glsl */,
+				EF0FC1311DF4D87C00AA0EA6 /* zBias_v.glsl */,
 				EF6936A21DE75DE40010239C /* savedParams.json */,
 				9B4CB8864DFD4A3E8C80C2C0 /* CinderApp.icns */,
 				97E92268A98B4542A4EA2943 /* Info.plist */,
@@ -279,8 +291,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF0FC1341DF4D87C00AA0EA6 /* passThrough_v.glsl in Resources */,
 				FB078F37B81A492FB10BB59D /* CinderApp.icns in Resources */,
+				EF0FC1351DF4D87C00AA0EA6 /* zBias_v.glsl in Resources */,
+				EF0FC1321DF4D87C00AA0EA6 /* distortion_f.glsl in Resources */,
 				EF6936A31DE75DE40010239C /* savedParams.json in Resources */,
+				EF0FC1331DF4D87C00AA0EA6 /* passThrough_f.glsl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
