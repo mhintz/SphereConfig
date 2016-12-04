@@ -53,6 +53,7 @@ class SphereConfigApp : public App {
 
 	// Interior mode stuff
 	CameraPersp mInteriorCamera;
+	int mMinSidePixels;
 	InteriorConfig mInteriorConfig;
 	gl::FboRef mInteriorDistortionFbo;
 	gl::GlslProgRef mInteriorDistortionShader;
@@ -67,11 +68,8 @@ static int const INTERIOR_DISTORTION_TEX_BIND_POINT = 0;
 static string const PARAMS_FILE_LOCATION = "savedParams.json";
 
 void SphereConfigApp::prepSettings(Settings * settings) {
-	ivec2 displaySize = Display::getMainDisplay()->getSize();
-	int windowSide = min(displaySize.x, displaySize.y);
-	settings->setWindowSize(windowSide, windowSide);
-	// settings->setFullScreen(); // someday...
 	settings->setTitle("Sphere Configuration");
+	settings->setFullScreen();
 	settings->setHighDensityDisplayEnabled();
 }
 
@@ -116,25 +114,29 @@ void SphereConfigApp::setup()
 
 	// ^^^^ Have to set up the params before the CameraUI, or else things get screwy
 
-	// Set up two possible cameras
-	mInteriorCamera.lookAt(vec3(0, 1, 0), vec3(0, 0, 0), vec3(0, 0, 1));
-	mInteriorCamera.setAspectRatio(getWindowAspectRatio());
-	// mInteriorCamera.setAspectRatio(1); // someday...
+	// Setup graticule mesh
+	auto baseMesh = bmesh::makeGraticule(vec3(0, 0, 0), 1.0);
+	mGraticuleMesh = bmeshToVBOMesh(baseMesh);
 
 	// Exterior view
 	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
 
-	// Setup mesh
-	auto baseMesh = bmesh::makeGraticule(vec3(0, 0, 0), 1.0);
-	mGraticuleMesh = bmeshToVBOMesh(baseMesh);
 	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(0, 0, 4)));
 	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(-4.5, 0, -3.5)));
 	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(4.5, 0, -3.5)));
 
+	// Interior view
+	ivec2 displaySize = toPixels(getWindowSize());
+	mMinSidePixels = min(displaySize.x, displaySize.y);
+
+	// mInteriorCamera.setAspectRatio(getWindowAspectRatio());
+	mInteriorCamera = CameraPersp(mMinSidePixels, mMinSidePixels, 35, 0.001f, 10.f);
+	mInteriorCamera.lookAt(vec3(0, 1, 0), vec3(0, 0, 0), vec3(0, 0, 1));
+
 	// Set up interior distortion rendering
-	mInteriorDistortionFbo = gl::Fbo::create(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
+	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
 	mInteriorDistortionShader = gl::GlslProg::create(loadAsset("passThrough_v.glsl"), loadAsset("distortion_f.glsl"));
 	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
 }
@@ -162,6 +164,7 @@ void SphereConfigApp::draw()
 	if (mConfigMode == ConfigMode::Interior) {	
 		{
 			gl::ScopedFramebuffer scpFB(mInteriorDistortionFbo);
+			gl::ScopedViewport scpViewport(0, 0, mMinSidePixels, mMinSidePixels);
 			gl::clear(Color(0, 0, 0));
 			gl::ScopedMatrices scpMat;
 			gl::setMatrices(mInteriorCamera);
@@ -169,12 +172,15 @@ void SphereConfigApp::draw()
 		}
 
 		{
+			gl::ScopedViewport scpViewport((toPixels(getWindowWidth()) - mMinSidePixels) / 2, (toPixels(getWindowHeight()) - mMinSidePixels) / 2, mMinSidePixels, mMinSidePixels);
 			gl::clear(Color(0, 0, 0));
-			gl::ScopedMatrices scpMat;
-			gl::setMatricesWindow(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
+
 			gl::ScopedGlslProg scpShader(mInteriorDistortionShader);
 			gl::ScopedTextureBind scpTex(mInteriorDistortionFbo->getColorTexture(), INTERIOR_DISTORTION_TEX_BIND_POINT);
-			gl::drawSolidRect(toPixels(getWindowBounds()));
+
+			gl::ScopedMatrices scpMat;
+			gl::setMatricesWindow(mMinSidePixels, mMinSidePixels);
+			gl::drawSolidRect(Rectf(0.0, 0.0, mMinSidePixels, mMinSidePixels));
 		}
 	} else if (mConfigMode == ConfigMode::Exterior) {
 		{
