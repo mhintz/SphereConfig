@@ -194,6 +194,8 @@ void SphereConfigApp::keyDown(KeyEvent event) {
 		quit();
 	} else if (event.getCode() == KeyEvent::KEY_SPACE) {
 		saveParams();
+	} else if (event.getCode() == KeyEvent::KEY_p) {
+		mParams->maximize(!mParams->isMaximized());
 	}
 }
 
