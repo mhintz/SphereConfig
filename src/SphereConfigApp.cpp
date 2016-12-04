@@ -95,11 +95,17 @@ void SphereConfigApp::setup()
 		"Internal Config",
 		"External Config"
 	}, [this] (int cfigMode) {
-		if (cfigMode == 0) { mConfigMode = ConfigMode::Interior; }
-		else if (cfigMode == 1) { mConfigMode = ConfigMode::Exterior; }
+		switch (cfigMode) {
+			case 0: mConfigMode = ConfigMode::Interior; break;
+			case 1: mConfigMode = ConfigMode::Exterior; break;
+			default: throw std::invalid_argument("invalid config mode parameter");
+		}
 	}, [this] () {
-		if (mConfigMode == ConfigMode::Interior) { return 0; }
-		else if (mConfigMode == ConfigMode::Exterior) { return 1; }
+		// clang++ checks this statement for completeness and has a warning if not all enums are covered... nice! :)
+		switch (mConfigMode) {
+			case ConfigMode::Interior: return 0;
+			case ConfigMode::Exterior: return 1;
+		}
 	});
 
 	mParams->addParam("Camera FOV", & mInteriorConfig.cameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
