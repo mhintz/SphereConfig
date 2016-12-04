@@ -39,11 +39,11 @@ public:
 	mat4 const & getProjectionMatrix();
 
 	// Accessors for properties
-	float getHorFOV() { return mHorFOV; }
-	float getVertFOV() { return mVertFOV; }
-	float getVertBaseAngle() { return mVertBaseAngle; }
-	vec3 getPos() { return mPosition; }
-	bool getUpsideDown() { return mUpsideDown; }
+	float getHorFOV() const { return mHorFOV; }
+	float getVertFOV() const { return mVertFOV; }
+	float getVertBaseAngle() const { return mVertBaseAngle; }
+	vec3 getPos() const { return mPosition; }
+	bool getUpsideDown() const { return mUpsideDown; }
 
 	void draw();
 
