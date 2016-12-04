@@ -31,6 +31,7 @@ struct InteriorConfig {
 
 struct ExteriorConfig {
 	bool renderOverview = true;
+	float sphereApexHeight = 2.5;
 	vector<Projector> projectors;
 	int projectorPov = 0;
 };
@@ -98,6 +99,8 @@ void SphereConfigApp::setup()
 		mExteriorConfig.projectors[1] = parseProjectorParams(appParams.getChild("projectors").getChild(1));
 		mExteriorConfig.projectors[2] = parseProjectorParams(appParams.getChild("projectors").getChild(2));
 
+		mExteriorConfig.sphereApexHeight = appParams.getValueForKey<float>("sphereApexHeight");
+
 		// Interior config stuff
 		mInteriorConfig.cameraFov = appParams.getChild("fov").getValue<float>();
 		mInteriorConfig.distortionPower = appParams.getChild("distortionPower").getValue<float>();
@@ -130,7 +133,8 @@ void SphereConfigApp::setup()
 	// ^^^^ Have to set up the params before the CameraUI, or else things get screwy
 
 	// Setup graticule mesh
-	auto baseMesh = bmesh::makeGraticule(vec3(0, 0, 0), 1.0);
+	// Move the center down by 1 so that it can be positioned from the top point
+	auto baseMesh = bmesh::makeGraticule(vec3(0, -1.0, 0), 1.0);
 	mGraticuleMesh = bmeshToVBOMesh(baseMesh);
 
 	// Exterior view
@@ -142,6 +146,7 @@ void SphereConfigApp::setup()
 	mParams->addParam("Projector POV", {
 		"Projector 1", "Projector 2", "Projector 3"
 	}, & mExteriorConfig.projectorPov);
+	mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(2.0).max(5.0).precision(2).step(0.01f);
 
 	mParams->addSeparator();
 
@@ -162,7 +167,7 @@ void SphereConfigApp::setup()
 
 	// mInteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mInteriorCamera = CameraPersp(mMinSidePixels, mMinSidePixels, 35, 0.001f, 10.f);
-	mInteriorCamera.lookAt(vec3(0, 1, 0), vec3(0, 0, 0), vec3(0, 0, 1));
+	mInteriorCamera.lookAt(vec3(0, 0, 0), vec3(0, -1, 0), vec3(0, 0, 1));
 
 	// Set up interior distortion rendering
 	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
@@ -222,6 +227,8 @@ void SphereConfigApp::draw()
 			gl::setMatrices(mExteriorCamera);
 
 			{
+				gl::ScopedMatrices innerScope;
+				gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
 				gl::draw(mGraticuleMesh);
 			}
 
@@ -241,6 +248,7 @@ void SphereConfigApp::draw()
 			gl::setViewMatrix(viewProjector.getViewMatrix());
 			gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
 
+			gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
 			gl::draw(mGraticuleMesh);
 		}
 	}
@@ -292,6 +300,7 @@ void SphereConfigApp::saveParams() {
 			.addChild(serializeProjector(mExteriorConfig.projectors[1]))
 			.addChild(serializeProjector(mExteriorConfig.projectors[2]))
 	);
+	appParams.addChild(JsonTree("sphereApexHeight", mExteriorConfig.sphereApexHeight));
 
 	string serializedParams = appParams.serialize();
 	std::ofstream writeFile;
