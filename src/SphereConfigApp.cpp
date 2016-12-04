@@ -46,27 +46,25 @@ class SphereConfigApp : public App {
 	JsonTree loadParams();
 	void saveParams();
 
+	// General stuff
 	params::InterfaceGlRef mParams;
-
-	ConfigMode mConfigMode = ConfigMode::Exterior;
-
-	CameraPersp mInteriorCamera;
-
-	CameraPersp mExteriorCamera;
-	CameraUi mExteriorUiCamera;
-
-	InteriorConfig mInteriorConfig;
-	ExteriorConfig mExteriorConfig;
-
+	ConfigMode mConfigMode = ConfigMode::Interior;
 	gl::VboMeshRef mGraticuleMesh;
 
+	// Interior mode stuff
+	CameraPersp mInteriorCamera;
+	InteriorConfig mInteriorConfig;
 	gl::FboRef mInteriorDistortionFbo;
 	gl::GlslProgRef mInteriorDistortionShader;
 
-	string mParamsLoc = "savedParams.json";
+	// Exterior mode stuff
+	CameraPersp mExteriorCamera;
+	CameraUi mExteriorUiCamera;
+	ExteriorConfig mExteriorConfig;
 };
 
-#define INTERIOR_DISTORTION_TEX_BIND_POINT 0
+static int const INTERIOR_DISTORTION_TEX_BIND_POINT = 0;
+static string const PARAMS_FILE_LOCATION = "savedParams.json";
 
 void SphereConfigApp::prepSettings(Settings * settings) {
 	ivec2 displaySize = Display::getMainDisplay()->getSize();
@@ -205,7 +203,7 @@ void SphereConfigApp::draw()
 }
 
 JsonTree SphereConfigApp::loadParams() {
-	return JsonTree(loadResource(mParamsLoc));
+	return JsonTree(loadResource(PARAMS_FILE_LOCATION));
 }
 
 void SphereConfigApp::saveParams() {
@@ -217,13 +215,13 @@ void SphereConfigApp::saveParams() {
 	string serializedParams = appParams.serialize();
 	std::ofstream writeFile;
 
-	string appOwnFile = getResourcePath(mParamsLoc).string();
+	string appOwnFile = getResourcePath(PARAMS_FILE_LOCATION).string();
 	writeFile.open(appOwnFile);
 	std::cout << "writing params to: " << appOwnFile << std::endl;
 	writeFile << serializedParams;
 	writeFile.close();
 
-	string repoFile = fs::canonical("../../../resources/" + mParamsLoc).string();
+	string repoFile = fs::canonical("../../../resources/" + PARAMS_FILE_LOCATION).string();
 	writeFile.open(repoFile);
 	std::cout << "writing params to: " << repoFile << std::endl;
 	writeFile << serializedParams;
