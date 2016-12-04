@@ -61,6 +61,7 @@ class SphereConfigApp : public App {
 	params::InterfaceGlRef mParams;
 	ConfigMode mConfigMode = ConfigMode::Exterior;
 	gl::VboMeshRef mGraticuleMesh;
+	gl::VboMeshRef mSolidSphereMesh;
 
 	// Interior mode stuff
 	CameraPersp mInteriorCamera;
@@ -73,6 +74,7 @@ class SphereConfigApp : public App {
 	CameraPersp mExteriorCamera;
 	CameraUi mExteriorUiCamera;
 	ExteriorConfig mExteriorConfig;
+	gl::GlslProgRef mZBiasShader;
 };
 
 static int const INTERIOR_DISTORTION_TEX_BIND_POINT = 0;
@@ -100,13 +102,14 @@ void SphereConfigApp::setup()
 
 	// Setup graticule mesh
 	// Move the center down by 1 so that it can be positioned from the top point
-	auto baseMesh = bmesh::makeGraticule(vec3(0, -1.0, 0), 1.0);
-	mGraticuleMesh = bmeshToVBOMesh(baseMesh);
+	mGraticuleMesh = bmeshToVBOMesh(bmesh::makeGraticule(vec3(0, -1.0, 0), 1.0f));
 
 	// Exterior view
 	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
+	mSolidSphereMesh = gl::VboMesh::create(geom::Sphere().center(vec3(0, -1, 0)).radius(1.0f), { geom::POSITION });
+	mZBiasShader = gl::GlslProg::create(loadAsset("zBias_v.glsl"), loadAsset("passThrough_f.glsl"));
 
 	// Interior view
 	ivec2 displaySize = toPixels(getWindowSize());
@@ -194,7 +197,16 @@ void SphereConfigApp::draw()
 			gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
 
 			gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
-			gl::draw(mGraticuleMesh);
+
+			{
+				gl::ScopedColor scpColor(0, 0, 0);
+				gl::draw(mSolidSphereMesh);
+			}
+
+			{
+				gl::ScopedGlslProg scpShader(mZBiasShader);
+				gl::draw(mGraticuleMesh);
+			}
 		}
 	}
 
