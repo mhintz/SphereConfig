@@ -18,6 +18,9 @@ public:
 	static float horizontalAngleFromDims(float zDistance, float imgWidth);
 	// Calculates aspect ratio from a width and a height
 
+	Projector()
+	: mHorFOV(M_PI / 4), mVertFOV(M_PI / 4), mVertBaseAngle(M_PI / 8) {}
+
 	Projector(float horFOV, float vertFOV, float baseAngle)
 	: mHorFOV(horFOV), mVertFOV(vertFOV), mVertBaseAngle(baseAngle) {}
 
@@ -34,6 +37,13 @@ public:
 	// Accessors for the matrices
 	mat4 const & getViewMatrix();
 	mat4 const & getProjectionMatrix();
+
+	// Accessors for properties
+	float getHorFOV() { return mHorFOV; }
+	float getVertFOV() { return mVertFOV; }
+	float getVertBaseAngle() { return mVertBaseAngle; }
+	vec3 getPos() { return mPosition; }
+	vec3 getUp() { return mUp; }
 
 	void draw();
 
