@@ -32,12 +32,18 @@ struct InteriorConfig {
 struct ExteriorConfig {
 	bool renderOverview = true;
 	float sphereApexHeight = 2.5;
-	vector<Projector> projectors;
+	vector<Projector> projectors = {
+		getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 0)),
+		getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)),
+		getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 2 / 3))
+	};
 	int projectorPov = 0;
 };
 
-Projector parseProjectorParams(JsonTree params);
-JsonTree serializeProjector(Projector theProjector);
+void loadParams(InteriorConfig * interior, ExteriorConfig * exterior);
+Projector parseProjectorParams(JsonTree const & params);
+JsonTree serializeProjector(Projector const & theProjector);
+void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior);
 
 class SphereConfigApp : public App {
   public:
@@ -49,8 +55,7 @@ class SphereConfigApp : public App {
 	void update() override;
 	void draw() override;
 
-	JsonTree loadParams();
-	void saveParams();
+	void initializeControls();
 
 	// General stuff
 	params::InterfaceGlRef mParams;
@@ -86,51 +91,12 @@ void SphereConfigApp::setup()
 	gl::enableFaceCulling();
 	gl::cullFace(GL_BACK);
 
-	// Default projector config values
-	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 0)));
-	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)));
-	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 2 / 3)));
-
 	// Load parameters from saved file
-	try {
-		JsonTree appParams = loadParams();
-
-		mExteriorConfig.projectors[0] = parseProjectorParams(appParams.getChild("projectors").getChild(0));
-		mExteriorConfig.projectors[1] = parseProjectorParams(appParams.getChild("projectors").getChild(1));
-		mExteriorConfig.projectors[2] = parseProjectorParams(appParams.getChild("projectors").getChild(2));
-
-		mExteriorConfig.sphereApexHeight = appParams.getValueForKey<float>("sphereApexHeight");
-
-		// Interior config stuff
-		mInteriorConfig.cameraFov = appParams.getChild("fov").getValue<float>();
-		mInteriorConfig.distortionPower = appParams.getChild("distortionPower").getValue<float>();
-	} catch (ResourceLoadExc exc) {
-		console() << "Failed to load parameters - they probably don't exist yet : " << exc.what() << std::endl;
-	} catch (JsonTree::ExcChildNotFound exc) {
-		console() << "Failed to load one of the JsonTree children: " << exc.what() << std::endl;
-	}
+	loadParams(& mInteriorConfig, & mExteriorConfig);
 
 	// Setup params
-	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, getWindowHeight() - 20)));
-
-	mParams->addParam("Configuration Mode", {
-		"Internal Config",
-		"External Config"
-	}, [this] (int cfigMode) {
-		switch (cfigMode) {
-			case 0: mConfigMode = ConfigMode::Interior; break;
-			case 1: mConfigMode = ConfigMode::Exterior; break;
-			default: throw std::invalid_argument("invalid config mode parameter");
-		}
-	}, [this] () {
-		// clang++ checks this statement for completeness and has a warning if not all enums are covered... nice! :)
-		switch (mConfigMode) {
-			case ConfigMode::Interior: return 0;
-			case ConfigMode::Exterior: return 1;
-		}
-	});
-
-	// ^^^^ Have to set up the params before the CameraUI, or else things get screwy
+	// Have to set up the params before the CameraUI, or else things get screwy
+	initializeControls();
 
 	// Setup graticule mesh
 	// Move the center down by 1 so that it can be positioned from the top point
@@ -141,32 +107,6 @@ void SphereConfigApp::setup()
 	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
-
-	mParams->addParam("Render Overview", & mExteriorConfig.renderOverview);
-	mParams->addParam("Projector POV", {
-		"Projector 1", "Projector 2", "Projector 3"
-	}, & mExteriorConfig.projectorPov);
-	mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(2.0).max(5.0).precision(2).step(0.01f);
-
-	mParams->addSeparator();
-
-	for (int i = 0; i < mExteriorConfig.projectors.size(); i++) {
-		string projectorName = "Projector " + std::to_string(i + 1);
-
-		mParams->addParam(projectorName + " Position", std::function<void (vec3)>([this, i] (vec3 projPos) {
-			mExteriorConfig.projectors[i].moveTo(projPos);
-		}), std::function<vec3 ()>([this, i] () {
-			return mExteriorConfig.projectors[i].getPos();
-		}));
-
-		mParams->addParam(projectorName + " Flipped", std::function<void (bool)>([this, i] (bool isFlipped) {
-			mExteriorConfig.projectors[i].setUpsideDown(isFlipped);
-		}), std::function<bool ()>([this, i] () {
-			return mExteriorConfig.projectors[i].getUpsideDown();
-		}));
-	}
-
-	mParams->addSeparator();
 
 	// Interior view
 	ivec2 displaySize = toPixels(getWindowSize());
@@ -180,9 +120,6 @@ void SphereConfigApp::setup()
 	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
 	mInteriorDistortionShader = gl::GlslProg::create(loadAsset("passThrough_v.glsl"), loadAsset("distortion_f.glsl"));
 	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
-
-	mParams->addParam("Camera FOV", & mInteriorConfig.cameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
-	mParams->addParam("Distortion Power", & mInteriorConfig.distortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
 }
 
 void SphereConfigApp::mouseDown( MouseEvent event )
@@ -193,7 +130,7 @@ void SphereConfigApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_ESCAPE) {
 		quit();
 	} else if (event.getCode() == KeyEvent::KEY_SPACE) {
-		saveParams();
+		saveParams(mInteriorConfig, mExteriorConfig);
 	} else if (event.getCode() == KeyEvent::KEY_p) {
 		mParams->maximize(!mParams->isMaximized());
 	}
@@ -265,8 +202,77 @@ void SphereConfigApp::draw()
 	mParams->draw();
 }
 
-JsonTree SphereConfigApp::loadParams() {
-	return JsonTree(loadResource(PARAMS_FILE_LOCATION));
+void SphereConfigApp::initializeControls() {
+	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, getWindowHeight() - 20)));
+
+	mParams->addParam("Configuration Mode", {
+		"Internal Config",
+		"External Config"
+	}, [this] (int cfigMode) {
+		switch (cfigMode) {
+			case 0: mConfigMode = ConfigMode::Interior; break;
+			case 1: mConfigMode = ConfigMode::Exterior; break;
+			default: throw std::invalid_argument("invalid config mode parameter");
+		}
+	}, [this] () {
+		// clang++ checks this statement for completeness and has a warning if not all enums are covered... nice! :)
+		switch (mConfigMode) {
+			case ConfigMode::Interior: return 0;
+			case ConfigMode::Exterior: return 1;
+		}
+	});
+
+	mParams->addParam("Render Overview", & mExteriorConfig.renderOverview);
+
+	mParams->addParam("Projector POV", {
+		"Projector 1", "Projector 2", "Projector 3"
+	}, & mExteriorConfig.projectorPov);
+
+	mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(2.0).max(5.0).precision(2).step(0.01f);
+
+	mParams->addSeparator();
+
+	for (int i = 0; i < mExteriorConfig.projectors.size(); i++) {
+		string projectorName = "Projector " + std::to_string(i + 1);
+
+		mParams->addParam(projectorName + " Position", std::function<void (vec3)>([this, i] (vec3 projPos) {
+			mExteriorConfig.projectors[i].moveTo(projPos);
+		}), std::function<vec3 ()>([this, i] () {
+			return mExteriorConfig.projectors[i].getPos();
+		}));
+
+		mParams->addParam(projectorName + " Flipped", std::function<void (bool)>([this, i] (bool isFlipped) {
+			mExteriorConfig.projectors[i].setUpsideDown(isFlipped);
+		}), std::function<bool ()>([this, i] () {
+			return mExteriorConfig.projectors[i].getUpsideDown();
+		}));
+	}
+
+	mParams->addSeparator();
+
+	mParams->addParam("Camera FOV", & mInteriorConfig.cameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
+
+	mParams->addParam("Distortion Power", & mInteriorConfig.distortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
+}
+
+void loadParams(InteriorConfig * interior, ExteriorConfig * exterior) {
+	try {
+		JsonTree params(loadResource(PARAMS_FILE_LOCATION));
+
+		exterior->projectors[0] = parseProjectorParams(params.getChild("projectors").getChild(0));
+		exterior->projectors[1] = parseProjectorParams(params.getChild("projectors").getChild(1));
+		exterior->projectors[2] = parseProjectorParams(params.getChild("projectors").getChild(2));
+
+		exterior->sphereApexHeight = params.getValueForKey<float>("sphereApexHeight");
+
+		// Interior config stuff
+		interior->cameraFov = params.getChild("fov").getValue<float>();
+		interior->distortionPower = params.getChild("distortionPower").getValue<float>();
+	} catch (ResourceLoadExc exc) {
+		app::console() << "Failed to load parameters - they probably don't exist yet : " << exc.what() << std::endl;
+	} catch (JsonTree::ExcChildNotFound exc) {
+		app::console() << "Failed to load one of the JsonTree children: " << exc.what() << std::endl;
+	}
 }
 
 vec3 parseVector(JsonTree vt) {
@@ -280,7 +286,7 @@ JsonTree serializeVector(string name, vec3 v) {
 		.addChild(JsonTree("", v.z));
 }
 
-Projector parseProjectorParams(JsonTree params) {
+Projector parseProjectorParams(JsonTree const & params) {
 	return Projector()
 		.setHorFOV(params.getValueForKey<float>("horFOV"))
 		.setVertFOV(params.getValueForKey<float>("vertFOV"))
@@ -289,7 +295,7 @@ Projector parseProjectorParams(JsonTree params) {
 		.setUpsideDown(params.getValueForKey<bool>("isUpsideDown"));
 }
 
-JsonTree serializeProjector(Projector proj) {
+JsonTree serializeProjector(Projector const & proj) {
 	return JsonTree()
 		.addChild(JsonTree("horFOV", proj.getHorFOV()))
 		.addChild(JsonTree("vertFOV", proj.getVertFOV()))
@@ -298,18 +304,19 @@ JsonTree serializeProjector(Projector proj) {
 		.addChild(JsonTree("isUpsideDown", proj.getUpsideDown()));
 }
 
-void SphereConfigApp::saveParams() {
+void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior) {
 	JsonTree appParams;
 
-	appParams.addChild(JsonTree("fov", mInteriorConfig.cameraFov));
-	appParams.addChild(JsonTree("distortionPower", mInteriorConfig.distortionPower));
+	appParams.addChild(JsonTree("fov", interior.cameraFov));
+	appParams.addChild(JsonTree("distortionPower", interior.distortionPower));
+
 	appParams.addChild(
 		JsonTree::makeArray("projectors")
-			.addChild(serializeProjector(mExteriorConfig.projectors[0]))
-			.addChild(serializeProjector(mExteriorConfig.projectors[1]))
-			.addChild(serializeProjector(mExteriorConfig.projectors[2]))
+			.addChild(serializeProjector(exterior.projectors[0]))
+			.addChild(serializeProjector(exterior.projectors[1]))
+			.addChild(serializeProjector(exterior.projectors[2]))
 	);
-	appParams.addChild(JsonTree("sphereApexHeight", mExteriorConfig.sphereApexHeight));
+	appParams.addChild(JsonTree("sphereApexHeight", exterior.sphereApexHeight));
 
 	string serializedParams = appParams.serialize();
 	std::ofstream writeFile;
