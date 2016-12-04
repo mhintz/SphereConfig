@@ -1,4 +1,4 @@
-.PHONY: build run
+.PHONY: build run deploy
 
 all: build run
 
@@ -7,3 +7,6 @@ build:
 
 run:
 	./xcode/build/Debug/SphereConfig.app/Contents/MacOS/SphereConfig
+
+deploy: build
+	cp -r ./xcode/build/Debug/SphereConfig.app ~/Dropbox/Apps
