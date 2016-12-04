@@ -34,12 +34,6 @@ Projector & Projector::moveTo(vec3 pos) {
 	return *this;
 }
 
-Projector & Projector::pointAt(vec3 target) {
-	mTarget = target;
-	mViewMatrixCached = false;
-	return *this;
-}
-
 Projector & Projector::setUp(vec3 up) {
 	mUp = up;
 	mViewMatrixCached = false;
@@ -52,14 +46,14 @@ Projector & Projector::setHorFOV(float fov) {
 	return *this;
 }
 
-Projector & Projector::setVertBaseAngle(float angle) {
-	mVertBaseAngle = angle;
+Projector & Projector::setVertFOV(float fov) {
+	mVertFOV = fov;
 	setProjectionMatrixDirty();
 	return *this;
 }
 
-Projector & Projector::setVertFOV(float fov) {
-	mVertFOV = fov;
+Projector & Projector::setVertBaseAngle(float angle) {
+	mVertBaseAngle = angle;
 	setProjectionMatrixDirty();
 	return *this;
 }

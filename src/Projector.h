@@ -23,14 +23,13 @@ public:
 
 	// View-changing functions
 	Projector & moveTo(vec3 pos);
-	Projector & pointAt(vec3 target);
 	Projector & setUp(vec3 up);
 
 	// Projection-changing functions
 	// For changing the projector's zoom and cast angle, which affect fov and base angle values
 	Projector & setHorFOV(float fov);
-	Projector & setVertBaseAngle(float angle);
 	Projector & setVertFOV(float fov);
+	Projector & setVertBaseAngle(float angle);
 
 	// Accessors for the matrices
 	mat4 const & getViewMatrix();
@@ -57,18 +56,17 @@ private:
 
 	// 3D position and orientation properties of the Projector's lens, here abstracted as a point in space
 	vec3 mPosition = vec3(0, 0, 1); // Position
-	vec3 mTarget = vec3(0); // Target point
 	vec3 mUp = vec3(0, 1, 0); // Up vector
 
 	// Properties of the projector's beam, used to determine the shape of the projector's projection frustum
 	// Horizontal FOV
 	float mHorFOV;
+	// Vertical FOV
+	float mVertFOV;
 	// The angular vertical shift of the projector.
 	// Measured as the angle between the projector's base level and the bottom of the projected image.
 	// I believe that for all projectors and projector setings, this is at least 0.
 	float mVertBaseAngle;
-	// Vertical FOV
-	float mVertFOV;
 };
 
 // Returns configuration for an Acer P5515 projector at minimum "zoom" setting
