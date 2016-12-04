@@ -135,6 +135,8 @@ void SphereConfigApp::keyDown(KeyEvent event) {
 		saveParams(mInteriorConfig, mExteriorConfig);
 	} else if (event.getCode() == KeyEvent::KEY_p) {
 		mParams->maximize(!mParams->isMaximized());
+	} else if (event.getCode() == KeyEvent::KEY_r) {
+		loadParams(& mInteriorConfig, & mExteriorConfig);
 	}
 }
 
