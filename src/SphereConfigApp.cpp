@@ -30,7 +30,9 @@ struct InteriorConfig {
 };
 
 struct ExteriorConfig {
+	bool renderOverview = true;
 	vector<Projector> projectors;
+	int projectorPov = 0;
 };
 
 class SphereConfigApp : public App {
@@ -48,7 +50,7 @@ class SphereConfigApp : public App {
 
 	// General stuff
 	params::InterfaceGlRef mParams;
-	ConfigMode mConfigMode = ConfigMode::Interior;
+	ConfigMode mConfigMode = ConfigMode::Exterior;
 	gl::VboMeshRef mGraticuleMesh;
 
 	// Interior mode stuff
@@ -90,7 +92,7 @@ void SphereConfigApp::setup()
 	}
 
 	// Setup params
-	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, 50)));
+	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, 400)));
 
 	mParams->addParam("Configuration Mode", {
 		"Internal Config",
@@ -109,9 +111,6 @@ void SphereConfigApp::setup()
 		}
 	});
 
-	mParams->addParam("Camera FOV", & mInteriorConfig.cameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
-	mParams->addParam("Distortion Power", & mInteriorConfig.distortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
-
 	// ^^^^ Have to set up the params before the CameraUI, or else things get screwy
 
 	// Setup graticule mesh
@@ -127,6 +126,11 @@ void SphereConfigApp::setup()
 	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(-4.5, 0, -3.5)));
 	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(4.5, 0, -3.5)));
 
+	mParams->addParam("Render Overview", & mExteriorConfig.renderOverview);
+	mParams->addParam("Projector POV", {
+		"Projector 1", "Projector 2", "Projector 3"
+	}, & mExteriorConfig.projectorPov);
+
 	// Interior view
 	ivec2 displaySize = toPixels(getWindowSize());
 	mMinSidePixels = min(displaySize.x, displaySize.y);
@@ -139,6 +143,9 @@ void SphereConfigApp::setup()
 	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
 	mInteriorDistortionShader = gl::GlslProg::create(loadAsset("passThrough_v.glsl"), loadAsset("distortion_f.glsl"));
 	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
+
+	mParams->addParam("Camera FOV", & mInteriorConfig.cameraFov).min(60.f).max(180.f).precision(3).step(0.1f);
+	mParams->addParam("Distortion Power", & mInteriorConfig.distortionPower).min(0.0f).max(4.0f).precision(5).step(0.001f);
 }
 
 void SphereConfigApp::mouseDown( MouseEvent event )
@@ -183,9 +190,9 @@ void SphereConfigApp::draw()
 			gl::drawSolidRect(Rectf(0.0, 0.0, mMinSidePixels, mMinSidePixels));
 		}
 	} else if (mConfigMode == ConfigMode::Exterior) {
-		{
-			gl::clear(Color(0, 0, 0));
+		gl::clear(Color(0, 0, 0));
 
+		if (mExteriorConfig.renderOverview) {
 			gl::ScopedMatrices scpMat;
 			gl::setMatrices(mExteriorCamera);
 
@@ -202,6 +209,14 @@ void SphereConfigApp::draw()
 			for (auto & proj : mExteriorConfig.projectors) {
 				proj.draw();
 			}
+		} else {
+			Projector & viewProjector = mExteriorConfig.projectors[mExteriorConfig.projectorPov];
+
+			gl::ScopedMatrices scpMat;
+			gl::setViewMatrix(viewProjector.getViewMatrix());
+			gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
+
+			gl::draw(mGraticuleMesh);
 		}
 	}
 
