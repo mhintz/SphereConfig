@@ -152,10 +152,17 @@ void SphereConfigApp::setup()
 
 	for (int i = 0; i < mExteriorConfig.projectors.size(); i++) {
 		string projectorName = "Projector " + std::to_string(i + 1);
+
 		mParams->addParam(projectorName + " Position", std::function<void (vec3)>([this, i] (vec3 projPos) {
 			mExteriorConfig.projectors[i].moveTo(projPos);
 		}), std::function<vec3 ()>([this, i] () {
 			return mExteriorConfig.projectors[i].getPos();
+		}));
+
+		mParams->addParam(projectorName + " Flipped", std::function<void (bool)>([this, i] (bool isFlipped) {
+			mExteriorConfig.projectors[i].setUpsideDown(isFlipped);
+		}), std::function<bool ()>([this, i] () {
+			return mExteriorConfig.projectors[i].getUpsideDown();
 		}));
 	}
 
@@ -277,7 +284,7 @@ Projector parseProjectorParams(JsonTree params) {
 		.setVertFOV(params.getValueForKey<float>("vertFOV"))
 		.setVertBaseAngle(params.getValueForKey<float>("baseAngle"))
 		.moveTo(parseVector(params.getChild("position")))
-		.setUp(parseVector(params.getChild("up")));
+		.setUpsideDown(params.getValueForKey<bool>("isUpsideDown"));
 }
 
 JsonTree serializeProjector(Projector proj) {
@@ -286,7 +293,7 @@ JsonTree serializeProjector(Projector proj) {
 		.addChild(JsonTree("vertFOV", proj.getVertFOV()))
 		.addChild(JsonTree("baseAngle", proj.getVertBaseAngle()))
 		.addChild(serializeVector("position", proj.getPos()))
-		.addChild(serializeVector("up", proj.getUp()));
+		.addChild(JsonTree("isUpsideDown", proj.getUpsideDown()));
 }
 
 void SphereConfigApp::saveParams() {

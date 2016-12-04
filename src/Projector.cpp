@@ -34,8 +34,8 @@ Projector & Projector::moveTo(vec3 projPos) {
 	return *this;
 }
 
-Projector & Projector::setUp(vec3 up) {
-	mUp = up;
+Projector & Projector::setUpsideDown(bool isUpsideDown) {
+	mUpsideDown = isUpsideDown;
 	mViewMatrixCached = false;
 	return *this;
 }
@@ -119,7 +119,7 @@ void Projector::calcViewMatrix() {
 	// mPosition is considered a triple of (distance from center, y-position in space, angle about center)
 	// The projector is always "looking at" the nearest y-axis point
 	vec3 projWorldPosition(cos(mPosition.z) * mPosition.x, mPosition.y, sin(mPosition.z) * mPosition.x);
-	mViewMatrix = glm::lookAt(projWorldPosition, vec3(0, mPosition.y, 0), mUp);
+	mViewMatrix = glm::lookAt(projWorldPosition, vec3(0, mPosition.y, 0), mUpsideDown ? vec3(0, -1, 0) : vec3(0, 1, 0));
 	mViewMatrixCached = true;
 }
 
