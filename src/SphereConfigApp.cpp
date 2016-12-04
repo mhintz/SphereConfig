@@ -340,11 +340,23 @@ void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior
 	writeFile << serializedParams;
 	writeFile.close();
 
-	string repoFile = fs::canonical("../../../resources/" + PARAMS_FILE_LOCATION).string();
-	writeFile.open(repoFile);
-	std::cout << "writing params to: " << repoFile << std::endl;
-	writeFile << serializedParams;
-	writeFile.close();
+	// This code will work if you're developing in the repo.
+	// Otherwise it throws and the parameters aren't written to the local version
+	// of the parameters resource file. This is a really ugly way to do things,
+	// sometime when I'm feeling up to it, I'll dig deeper into the boost filesystem code
+	// and come up with a better way of handling this.
+	try {
+		fs::path repoFolder = fs::canonical("../../../resources");
+		if (fs::is_directory(repoFolder)) {
+			string repoFile = fs::canonical(repoFolder.string() + "/" + PARAMS_FILE_LOCATION).string();
+			writeFile.open(repoFile);
+			std::cout << "writing params to: " << repoFile << std::endl;
+			writeFile << serializedParams;
+			writeFile.close();
+		}
+	} catch (fs::filesystem_error exp) {
+		app::console() << "Encountered an error while reading from a file: " << exp.what() << std::endl;
+	}
 }
 
 CINDER_APP( SphereConfigApp, RendererGl, & SphereConfigApp::prepSettings )
