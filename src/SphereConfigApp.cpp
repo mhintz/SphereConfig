@@ -112,7 +112,6 @@ void SphereConfigApp::setup()
 	ivec2 displaySize = toPixels(getWindowSize());
 	mMinSidePixels = min(displaySize.x, displaySize.y);
 
-	// mInteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mInteriorCamera = CameraPersp(mMinSidePixels, mMinSidePixels, 35, 0.001f, 10.f);
 	mInteriorCamera.lookAt(vec3(0, 0, 0), vec3(0, -1, 0), vec3(0, 0, 1));
 
