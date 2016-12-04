@@ -79,6 +79,11 @@ void SphereConfigApp::prepSettings(Settings * settings) {
 
 void SphereConfigApp::setup()
 {
+	// GL stuff for basic sane 3D rendering
+	gl::enableDepth();
+	gl::enableFaceCulling();
+	gl::cullFace(GL_BACK);
+
 	// Load parameters from saved file
 	try {
 		JsonTree appParams = loadParams();
@@ -118,13 +123,17 @@ void SphereConfigApp::setup()
 	mInteriorCamera.setAspectRatio(getWindowAspectRatio());
 	// mInteriorCamera.setAspectRatio(1); // someday...
 
-	mExteriorCamera.lookAt(vec3(0, 0, 4), vec3(0), vec3(0, 1, 0));
+	// Exterior view
+	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
 
 	// Setup mesh
 	auto baseMesh = bmesh::makeGraticule(vec3(0, 0, 0), 1.0);
 	mGraticuleMesh = bmeshToVBOMesh(baseMesh);
+	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(0, 0, 4)));
+	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(-4.5, 0, -3.5)));
+	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(4.5, 0, -3.5)));
 
 	// Set up interior distortion rendering
 	mInteriorDistortionFbo = gl::Fbo::create(toPixels(getWindowWidth()), toPixels(getWindowHeight()));
@@ -172,9 +181,23 @@ void SphereConfigApp::draw()
 	} else if (mConfigMode == ConfigMode::Exterior) {
 		{
 			gl::clear(Color(0, 0, 0));
+
 			gl::ScopedMatrices scpMat;
 			gl::setMatrices(mExteriorCamera);
-			gl::draw(mGraticuleMesh);
+
+			{
+				gl::draw(mGraticuleMesh);
+			}
+
+			{
+				// For debugging: draw a plane at ground level
+				gl::ScopedColor scpColor(Color(0.2, 0.4, 0.8));
+				gl::draw(geom::WirePlane().subdivisions(ivec2(10, 10)).size(vec2(10.0, 10.0)));
+			}
+
+			for (auto & proj : mExteriorConfig.projectors) {
+				proj.draw();
+			}
 		}
 	}
 
