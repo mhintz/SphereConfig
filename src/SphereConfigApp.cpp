@@ -35,6 +35,9 @@ struct ExteriorConfig {
 	int projectorPov = 0;
 };
 
+Projector parseProjectorParams(JsonTree params);
+JsonTree serializeProjector(Projector theProjector);
+
 class SphereConfigApp : public App {
   public:
 	static void prepSettings(Settings * settings);
@@ -82,17 +85,30 @@ void SphereConfigApp::setup()
 	gl::enableFaceCulling();
 	gl::cullFace(GL_BACK);
 
+	// Default projector config values
+	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 0)));
+	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)));
+	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 2 / 3)));
+
 	// Load parameters from saved file
 	try {
 		JsonTree appParams = loadParams();
+
+		mExteriorConfig.projectors[0] = parseProjectorParams(appParams.getChild("projectors").getChild(0));
+		mExteriorConfig.projectors[1] = parseProjectorParams(appParams.getChild("projectors").getChild(1));
+		mExteriorConfig.projectors[2] = parseProjectorParams(appParams.getChild("projectors").getChild(2));
+
+		// Interior config stuff
 		mInteriorConfig.cameraFov = appParams.getChild("fov").getValue<float>();
 		mInteriorConfig.distortionPower = appParams.getChild("distortionPower").getValue<float>();
 	} catch (ResourceLoadExc exc) {
-		console() << "Failed to load parameters - they probably don't exist yet" << std::endl;
+		console() << "Failed to load parameters - they probably don't exist yet : " << exc.what() << std::endl;
+	} catch (JsonTree::ExcChildNotFound exc) {
+		console() << "Failed to load one of the JsonTree children: " << exc.what() << std::endl;
 	}
 
 	// Setup params
-	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, 400)));
+	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, getWindowHeight() - 20)));
 
 	mParams->addParam("Configuration Mode", {
 		"Internal Config",
@@ -122,14 +138,23 @@ void SphereConfigApp::setup()
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
 
-	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(0, 0, 4)));
-	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(-4.5, 0, -3.5)));
-	mExteriorConfig.projectors.push_back(getAcerP5515MaxZoom().moveTo(vec3(4.5, 0, -3.5)));
-
 	mParams->addParam("Render Overview", & mExteriorConfig.renderOverview);
 	mParams->addParam("Projector POV", {
 		"Projector 1", "Projector 2", "Projector 3"
 	}, & mExteriorConfig.projectorPov);
+
+	mParams->addSeparator();
+
+	for (int i = 0; i < mExteriorConfig.projectors.size(); i++) {
+		string projectorName = "Projector " + std::to_string(i + 1);
+		mParams->addParam(projectorName + " Position", std::function<void (vec3)>([this, i] (vec3 projPos) {
+			mExteriorConfig.projectors[i].moveTo(projPos);
+		}), std::function<vec3 ()>([this, i] () {
+			return mExteriorConfig.projectors[i].getPos();
+		}));
+	}
+
+	mParams->addSeparator();
 
 	// Interior view
 	ivec2 displaySize = toPixels(getWindowSize());
@@ -227,11 +252,46 @@ JsonTree SphereConfigApp::loadParams() {
 	return JsonTree(loadResource(PARAMS_FILE_LOCATION));
 }
 
+vec3 parseVector(JsonTree vt) {
+	return vec3(vt.getValueAtIndex<float>(0), vt.getValueAtIndex<float>(1), vt.getValueAtIndex<float>(2));
+}
+
+JsonTree serializeVector(string name, vec3 v) {
+	return JsonTree::makeArray(name)
+		.addChild(JsonTree("", v.x))
+		.addChild(JsonTree("", v.y))
+		.addChild(JsonTree("", v.z));
+}
+
+Projector parseProjectorParams(JsonTree params) {
+	return Projector()
+		.setHorFOV(params.getValueForKey<float>("horFOV"))
+		.setVertFOV(params.getValueForKey<float>("vertFOV"))
+		.setVertBaseAngle(params.getValueForKey<float>("baseAngle"))
+		.moveTo(parseVector(params.getChild("position")))
+		.setUp(parseVector(params.getChild("up")));
+}
+
+JsonTree serializeProjector(Projector proj) {
+	return JsonTree()
+		.addChild(JsonTree("horFOV", proj.getHorFOV()))
+		.addChild(JsonTree("vertFOV", proj.getVertFOV()))
+		.addChild(JsonTree("baseAngle", proj.getVertBaseAngle()))
+		.addChild(serializeVector("position", proj.getPos()))
+		.addChild(serializeVector("up", proj.getUp()));
+}
+
 void SphereConfigApp::saveParams() {
 	JsonTree appParams;
 
 	appParams.addChild(JsonTree("fov", mInteriorConfig.cameraFov));
 	appParams.addChild(JsonTree("distortionPower", mInteriorConfig.distortionPower));
+	appParams.addChild(
+		JsonTree::makeArray("projectors")
+			.addChild(serializeProjector(mExteriorConfig.projectors[0]))
+			.addChild(serializeProjector(mExteriorConfig.projectors[1]))
+			.addChild(serializeProjector(mExteriorConfig.projectors[2]))
+	);
 
 	string serializedParams = appParams.serialize();
 	std::ofstream writeFile;
