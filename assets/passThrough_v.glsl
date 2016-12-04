@@ -15,8 +15,8 @@ in vec3 ciNormal;
 out highp vec3 Normal;
 
 void main( void ) {
-    gl_Position = ciModelViewProjection * ciPosition;
-    TexCoord = ciTexCoord0;
-    Color = ciColor;
-    Normal = ciNormalMatrix * ciNormal;
+  gl_Position = ciModelViewProjection * ciPosition;
+  TexCoord = ciTexCoord0;
+  Color = ciColor;
+  Normal = ciNormalMatrix * ciNormal;
 }
