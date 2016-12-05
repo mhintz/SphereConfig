@@ -4,7 +4,7 @@ using namespace ci;
 
 // Default frustum near and far values
 const float PROJ_NEAR_PLANE_Z = 0.3; // 30cm
-const float PROJ_FAR_PLANE_Z = 18.0; // 18m
+const float PROJ_FAR_PLANE_Z = 10.0; // 18m
 
 Projector getAcerP5515MinZoom() {
 	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.04);
