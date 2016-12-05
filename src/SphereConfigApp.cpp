@@ -23,7 +23,8 @@ enum class ConfigMode {
 	Interior,
 	Exterior,
 	ProjectorView,
-	ProjectorAlignment
+	ProjectorAlignment,
+	ProjectorOff
 };
 
 struct InteriorConfig {
@@ -235,6 +236,9 @@ void SphereConfigApp::draw()
 			gl::rotate(-diagonal);
 			gl::drawSolidRect(Rectf(-20, -20, diagonalLength + 20, 20));
 		gl::popModelMatrix();
+	} else if (mConfigMode == ConfigMode::ProjectorOff) {
+		// Dark screen, for helping configure other projectors
+		gl::clear(Color(0, 0, 0));
 	}
 
 	mParams->draw();
@@ -247,13 +251,15 @@ void SphereConfigApp::initializeControls() {
 		"Internal Config",
 		"External Config",
 		"Projector View",
-		"Projector Alignment"
+		"Projector Alignment",
+		"Projector Off"
 	}, [this] (int cfigMode) {
 		switch (cfigMode) {
 			case 0: mConfigMode = ConfigMode::Interior; break;
 			case 1: mConfigMode = ConfigMode::Exterior; break;
 			case 2: mConfigMode = ConfigMode::ProjectorView; break;
 			case 3: mConfigMode = ConfigMode::ProjectorAlignment; break;
+			case 4: mConfigMode = ConfigMode::ProjectorOff; break;
 			default: throw std::invalid_argument("invalid config mode parameter");
 		}
 	}, [this] () {
@@ -263,6 +269,7 @@ void SphereConfigApp::initializeControls() {
 			case ConfigMode::Exterior: return 1;
 			case ConfigMode::ProjectorView: return 2;
 			case ConfigMode::ProjectorAlignment: return 3;
+			case ConfigMode::ProjectorOff: return 4;
 		}
 	});
 
