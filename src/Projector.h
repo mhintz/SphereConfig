@@ -84,3 +84,6 @@ Projector getAcerP5515MinZoom();
 
 // Returns configuration for an Acer P5515 projector at maximum "zoom" setting
 Projector getAcerP5515MaxZoom();
+
+// Returns configuration for a Qumi pocket projector
+Projector getQumi();

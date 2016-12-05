@@ -204,3 +204,9 @@ Projector getAcerP5515MaxZoom() {
 	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.94, 1.08);
 	return Projector(hfov, vertAngles[0], vertAngles[1]);
 }
+
+Projector getQumi() {
+	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.292);
+	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, .808, 0.808 + 0.20);
+	return Projector(hfov, vertAngles[0], vertAngles[1]);
+}
