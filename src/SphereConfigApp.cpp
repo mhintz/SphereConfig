@@ -21,7 +21,9 @@ using namespace std;
 
 enum class ConfigMode {
 	Interior,
-	Exterior
+	Exterior,
+	ProjectorView,
+	ProjectorAlignment
 };
 
 struct InteriorConfig {
@@ -30,12 +32,11 @@ struct InteriorConfig {
 };
 
 struct ExteriorConfig {
-	bool renderOverview = true;
 	float sphereApexHeight = 2.5;
 	vector<Projector> projectors = {
-		getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 0)),
-		getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)),
-		getAcerP5515MaxZoom().moveTo(vec3(5.0, 0, 2 * M_PI * 2 / 3))
+		Projector().moveTo(vec3(5.0, 0, 0)),
+		Projector().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)),
+		Projector().moveTo(vec3(5.0, 0, 2 * M_PI * 2 / 3))
 	};
 	int projectorPov = 0;
 };
@@ -153,6 +154,7 @@ void SphereConfigApp::draw()
 			gl::ScopedFramebuffer scpFB(mInteriorDistortionFbo);
 			gl::ScopedViewport scpViewport(0, 0, mMinSidePixels, mMinSidePixels);
 			gl::clear(Color(0, 0, 0));
+
 			gl::ScopedMatrices scpMat;
 			gl::setMatrices(mInteriorCamera);
 			gl::draw(mGraticuleMesh);
@@ -172,59 +174,85 @@ void SphereConfigApp::draw()
 	} else if (mConfigMode == ConfigMode::Exterior) {
 		gl::clear(Color(0, 0, 0));
 
-		if (mExteriorConfig.renderOverview) {
-			gl::ScopedMatrices scpMat;
-			gl::setMatrices(mExteriorCamera);
+		gl::ScopedMatrices scpMat;
+		gl::setMatrices(mExteriorCamera);
 
-			{
-				gl::ScopedMatrices innerScope;
-				gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
-				gl::draw(mGraticuleMesh);
-			}
-
-			{
-				// For debugging: draw a plane at ground level
-				gl::ScopedColor scpColor(Color(0.2, 0.4, 0.8));
-				gl::draw(geom::WirePlane().subdivisions(ivec2(10, 10)).size(vec2(10.0, 10.0)));
-			}
-
-			for (auto & proj : mExteriorConfig.projectors) {
-				proj.draw();
-			}
-		} else {
-			Projector & viewProjector = mExteriorConfig.projectors[mExteriorConfig.projectorPov];
-
-			gl::ScopedMatrices scpMat;
-			gl::setViewMatrix(viewProjector.getViewMatrix());
-			gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
-
+		{
+			gl::ScopedMatrices innerScope;
 			gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
-
-			{
-				gl::ScopedColor scpColor(0, 0, 0);
-				gl::draw(mSolidSphereMesh);
-			}
-
-			{
-				gl::ScopedGlslProg scpShader(mZBiasShader);
-				gl::draw(mGraticuleMesh);
-			}
+			gl::draw(mGraticuleMesh);
 		}
+
+		{
+			// For debugging: draw a plane at ground level
+			gl::ScopedColor scpColor(Color(0.2, 0.4, 0.8));
+			gl::draw(geom::WirePlane().subdivisions(ivec2(10, 10)).size(vec2(10.0, 10.0)));
+		}
+
+		for (auto & proj : mExteriorConfig.projectors) {
+			proj.draw();
+		}
+	} else if (mConfigMode == ConfigMode::ProjectorView) {
+		gl::clear(Color(0, 0, 0));
+
+		Projector & viewProjector = mExteriorConfig.projectors[mExteriorConfig.projectorPov];
+
+		gl::ScopedMatrices scpMat;
+		gl::setViewMatrix(viewProjector.getViewMatrix());
+		gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
+
+		gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
+
+		{
+			gl::ScopedColor scpColor(0, 0, 0);
+			gl::draw(mSolidSphereMesh);
+		}
+
+		{
+			gl::ScopedGlslProg scpShader(mZBiasShader);
+			gl::draw(mGraticuleMesh);
+		}
+	} else if (mConfigMode == ConfigMode::ProjectorAlignment) {
+		gl::clear(Color(1, 0, 0));
+
+		gl::ScopedMatrices scpMat;
+
+		vec2 size = vec2(getWindowSize());
+		float diagonal = atan2(size.y, size.x);
+		float diagonalLength = sqrt(pow(size.x, 2) + pow(size.y, 2));
+
+		gl::setMatricesWindow(size.x, size.y);
+		gl::ScopedColor scpColor(Color(1, 1, 1));
+
+		gl::pushModelMatrix();
+			gl::rotate(diagonal);
+			gl::drawSolidRect(Rectf(-20, -20, diagonalLength + 20, 20));
+		gl::popModelMatrix();
+
+		gl::pushModelMatrix();
+			gl::translate(0, size.y);
+			gl::rotate(-diagonal);
+			gl::drawSolidRect(Rectf(-20, -20, diagonalLength + 20, 20));
+		gl::popModelMatrix();
 	}
 
 	mParams->draw();
 }
 
 void SphereConfigApp::initializeControls() {
-	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(200, getWindowHeight() - 20)));
+	mParams = params::InterfaceGl::create(getWindow(), "App parameters", toPixels(ivec2(360, getWindowHeight() - 20)));
 
 	mParams->addParam("Configuration Mode", {
 		"Internal Config",
-		"External Config"
+		"External Config",
+		"Projector View",
+		"Projector Alignment"
 	}, [this] (int cfigMode) {
 		switch (cfigMode) {
 			case 0: mConfigMode = ConfigMode::Interior; break;
 			case 1: mConfigMode = ConfigMode::Exterior; break;
+			case 2: mConfigMode = ConfigMode::ProjectorView; break;
+			case 3: mConfigMode = ConfigMode::ProjectorAlignment; break;
 			default: throw std::invalid_argument("invalid config mode parameter");
 		}
 	}, [this] () {
@@ -232,10 +260,10 @@ void SphereConfigApp::initializeControls() {
 		switch (mConfigMode) {
 			case ConfigMode::Interior: return 0;
 			case ConfigMode::Exterior: return 1;
+			case ConfigMode::ProjectorView: return 2;
+			case ConfigMode::ProjectorAlignment: return 3;
 		}
 	});
-
-	mParams->addParam("Render Overview", & mExteriorConfig.renderOverview);
 
 	mParams->addParam("Projector POV", {
 		"Projector 1", "Projector 2", "Projector 3"
