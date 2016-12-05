@@ -8,12 +8,13 @@ build:
 run:
 	cd ./xcode/build/Debug && ./SphereConfig.app/Contents/MacOS/SphereConfig
 
-deploy: build
-	cp -r ./xcode/build/Debug/SphereConfig.app ~/Dropbox/Apps
-
+APP_DEPLOY_LOCATION := ~/Dropbox/SphereConfig
 PARAMS_LOCATION := SphereConfig.app/Contents/Resources/savedParams.json
+
+deploy: build
+	cp -r ./xcode/build/Debug/SphereConfig.app $(APP_DEPLOY_LOCATION)/SphereConfig.app
 
 # pulls in the params saved by another copy of the app on another computer...
 pull_params:
-	cp ~/Dropbox/Apps/$(PARAMS_LOCATION) ./resources/savedParams.json
-	cp ~/Dropbox/Apps/$(PARAMS_LOCATION) ./xcode/build/Debug/$(PARAMS_LOCATION)
+	cp $(APP_DEPLOY_LOCATION)/$(PARAMS_LOCATION) ./resources/savedParams.json
+	cp $(APP_DEPLOY_LOCATION)/$(PARAMS_LOCATION) ./xcode/build/Debug/$(PARAMS_LOCATION)
