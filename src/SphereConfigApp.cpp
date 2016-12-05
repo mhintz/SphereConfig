@@ -97,7 +97,7 @@ void SphereConfigApp::setup()
 
 	// Load parameters from saved file
 	loadParams(& mInteriorConfig, & mExteriorConfig);
-	// mExteriorConfig.projectors[2] = getQumi().moveTo(mExteriorConfig.projectors[2].getPos());
+	// mExteriorConfig.projectors[1] = getAcerP3251MinZoom().moveTo(mExteriorConfig.projectors[1].getPos());
 
 	// Setup params
 	// Have to set up the params before the CameraUI, or else things get screwy

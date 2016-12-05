@@ -210,3 +210,9 @@ Projector getQumi() {
 	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, .808, 0.808 + 0.20);
 	return Projector(hfov, vertAngles[0], vertAngles[1]);
 }
+
+Projector getAcerP3251MinZoom() {
+	auto hfov = Projector::horizontalAngleFromDims(2.0, 0.093);
+	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, .7, 0.8);
+	return Projector(hfov, vertAngles[0], vertAngles[1]);	
+}
