@@ -1,4 +1,4 @@
-.PHONY: all build run deploy pull_params
+.PHONY: all build run copy_params deploy pull_params
 
 all: build run
 
@@ -8,13 +8,17 @@ build:
 run:
 	cd ./xcode/build/Debug && ./SphereConfig.app/Contents/MacOS/SphereConfig
 
-APP_DEPLOY_LOCATION := ~/Dropbox/SphereConfig
+APP_LOCAL_FOLDER := ./xcode/build/Debug
+APP_DEPLOY_FOLDER := ~/Dropbox/SphereConfig
 PARAMS_LOCATION := SphereConfig.app/Contents/Resources/savedParams.json
 
+copy_params:
+	cp ./resources/savedParams.json $(APP_LOCAL_FOLDER)/$(PARAMS_LOCATION)
+
 deploy: build
-	cp -r ./xcode/build/Debug/SphereConfig.app/ $(APP_DEPLOY_LOCATION)/SphereConfig.app/
+	cp -r $(APP_LOCAL_FOLDER)/SphereConfig.app/ $(APP_DEPLOY_FOLDER)/SphereConfig.app/
 
 # pulls in the params saved by another copy of the app on another computer...
 pull_params:
-	cp $(APP_DEPLOY_LOCATION)/$(PARAMS_LOCATION) ./resources/savedParams.json
-	cp $(APP_DEPLOY_LOCATION)/$(PARAMS_LOCATION) ./xcode/build/Debug/$(PARAMS_LOCATION)
+	cp $(APP_DEPLOY_FOLDER)/$(PARAMS_LOCATION) ./resources/savedParams.json
+	cp $(APP_DEPLOY_FOLDER)/$(PARAMS_LOCATION) $(APP_LOCAL_FOLDER)/$(PARAMS_LOCATION)
