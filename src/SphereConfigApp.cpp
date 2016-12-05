@@ -276,17 +276,35 @@ void SphereConfigApp::initializeControls() {
 	for (int i = 0; i < mExteriorConfig.projectors.size(); i++) {
 		string projectorName = "Projector " + std::to_string(i + 1);
 
-		mParams->addParam(projectorName + " Position", std::function<void (vec3)>([this, i] (vec3 projPos) {
+		mParams->addParam<vec3>(projectorName + " Position", [this, i] (vec3 projPos) {
 			mExteriorConfig.projectors[i].moveTo(projPos);
-		}), std::function<vec3 ()>([this, i] () {
+		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getPos();
-		}));
+		});
 
-		mParams->addParam(projectorName + " Flipped", std::function<void (bool)>([this, i] (bool isFlipped) {
+		mParams->addParam<bool>(projectorName + " Flipped", [this, i] (bool isFlipped) {
 			mExteriorConfig.projectors[i].setUpsideDown(isFlipped);
-		}), std::function<bool ()>([this, i] () {
+		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getUpsideDown();
-		}));
+		});
+
+		mParams->addParam<float>(projectorName + " Horizontal FoV", [this, i] (float fov) {
+			mExteriorConfig.projectors[i].setHorFOV(fov);
+		}, [this, i] () {
+			return mExteriorConfig.projectors[i].getHorFOV();
+		}).min(M_PI / 16.0f).max(M_PI * 3.0 / 4.0).precision(2).step(0.01f);
+
+		mParams->addParam<float>(projectorName + " Vertical FoV", [this, i] (float fov) {
+			mExteriorConfig.projectors[i].setVertFOV(fov);
+		}, [this, i] () {
+			return mExteriorConfig.projectors[i].getVertFOV();
+		}).min(M_PI / 16.0f).max(M_PI * 3.0 / 4.0).precision(2).step(0.01f);
+
+		mParams->addParam<float>(projectorName + " Vertical Offset Angle", [this, i] (float angle) {
+			mExteriorConfig.projectors[i].setVertBaseAngle(angle);
+		}, [this, i] () {
+			return mExteriorConfig.projectors[i].getVertBaseAngle();
+		}).min(0.0f).max(M_PI / 2.0f).precision(2).step(0.01f);
 	}
 
 	mParams->addSeparator();
