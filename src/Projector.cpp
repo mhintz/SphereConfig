@@ -6,18 +6,6 @@ using namespace ci;
 const float PROJ_NEAR_PLANE_Z = 0.3; // 30cm
 const float PROJ_FAR_PLANE_Z = 10.0; // 18m
 
-Projector getAcerP5515MinZoom() {
-	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.04);
-	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.78, 0.90);
-	return Projector(hfov, vertAngles[0], vertAngles[1]);
-}
-
-Projector getAcerP5515MaxZoom() {
-	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.25);
-	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.94, 1.08);
-	return Projector(hfov, vertAngles[0], vertAngles[1]);
-}
-
 std::array<float, 2> Projector::verticalAnglesFromHeights(float zDistance, float imgHeight, float topHeight) {
 	float fullAngle = atan2(topHeight, zDistance);
 	float baseAngle = atan2(topHeight - imgHeight, zDistance);
@@ -203,4 +191,16 @@ void Projector::calcPolyline() {
 	mFrustumMesh.end();
 
 	mPolylineCached = true;
+}
+
+Projector getAcerP5515MinZoom() {
+	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.04);
+	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.78, 0.90);
+	return Projector(hfov, vertAngles[0], vertAngles[1]);
+}
+
+Projector getAcerP5515MaxZoom() {
+	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.25);
+	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.94, 1.08);
+	return Projector(hfov, vertAngles[0], vertAngles[1]);
 }
