@@ -1,4 +1,4 @@
-.PHONY: all build run copy_params deploy pull_params
+.PHONY: all build run manual_params_edit deploy pull_params
 
 all: build run
 
@@ -12,7 +12,7 @@ APP_LOCAL_FOLDER := ./xcode/build/Debug
 APP_DEPLOY_FOLDER := ~/Dropbox/SphereConfig
 PARAMS_LOCATION := SphereConfig.app/Contents/Resources/savedParams.json
 
-copy_params:
+manual_params_edit:
 	cp ./resources/savedParams.json $(APP_LOCAL_FOLDER)/$(PARAMS_LOCATION)
 
 deploy: build
