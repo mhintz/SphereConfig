@@ -281,7 +281,7 @@ void SphereConfigApp::initializeControls() {
 			mExteriorConfig.projectors[i].moveTo(projPos);
 		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getPos();
-		});
+		}).precision(4).step(0.01f);
 
 		mParams->addParam<bool>(projectorName + " Flipped", [this, i] (bool isFlipped) {
 			mExteriorConfig.projectors[i].setUpsideDown(isFlipped);
@@ -293,19 +293,19 @@ void SphereConfigApp::initializeControls() {
 			mExteriorConfig.projectors[i].setHorFOV(fov);
 		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getHorFOV();
-		}).min(M_PI / 16.0f).max(M_PI * 3.0 / 4.0).precision(2).step(0.01f);
+		}).min(M_PI / 16.0f).max(M_PI * 3.0 / 4.0).precision(4).step(0.001f);
 
 		mParams->addParam<float>(projectorName + " Vertical FoV", [this, i] (float fov) {
 			mExteriorConfig.projectors[i].setVertFOV(fov);
 		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getVertFOV();
-		}).min(M_PI / 16.0f).max(M_PI * 3.0 / 4.0).precision(2).step(0.01f);
+		}).min(M_PI / 16.0f).max(M_PI * 3.0 / 4.0).precision(4).step(0.001f);
 
 		mParams->addParam<float>(projectorName + " Vertical Offset Angle", [this, i] (float angle) {
 			mExteriorConfig.projectors[i].setVertBaseAngle(angle);
 		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getVertBaseAngle();
-		}).min(0.0f).max(M_PI / 2.0f).precision(2).step(0.01f);
+		}).min(0.0f).max(M_PI / 2.0f).precision(4).step(0.001f);
 	}
 
 	mParams->addSeparator();
