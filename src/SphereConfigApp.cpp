@@ -34,6 +34,7 @@ struct InteriorConfig {
 
 struct ExteriorConfig {
 	float sphereApexHeight = 2.5;
+	float sphereScale = 1.0;
 	vector<Projector> projectors = {
 		Projector().moveTo(vec3(5.0, 0, 0)),
 		Projector().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)),
@@ -182,6 +183,7 @@ void SphereConfigApp::draw()
 		{
 			gl::ScopedMatrices innerScope;
 			gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
+			gl::scale(vec3(mExteriorConfig.sphereScale));
 			gl::draw(mGraticuleMesh);
 		}
 
@@ -204,6 +206,7 @@ void SphereConfigApp::draw()
 		gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
 
 		gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
+		gl::scale(vec3(mExteriorConfig.sphereScale));
 
 		{
 			gl::ScopedColor scpColor(0, 0, 0);
@@ -277,7 +280,9 @@ void SphereConfigApp::initializeControls() {
 		"Projector 1", "Projector 2", "Projector 3"
 	}, & mExteriorConfig.projectorPov);
 
-	mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(2.0).max(5.0).precision(2).step(0.01f);
+	mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(0.0).max(6.0).precision(2).step(0.01f);
+
+	mParams->addParam("Sphere Scale", & mExteriorConfig.sphereScale).min(0.01).max(5.0).precision(4).step(0.01);
 
 	mParams->addSeparator();
 
