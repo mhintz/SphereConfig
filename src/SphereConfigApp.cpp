@@ -347,15 +347,15 @@ void loadParams(InteriorConfig * interior, ExteriorConfig * exterior) {
 	}
 }
 
-vec3 parseVector(JsonTree vt) {
-	return vec3(vt.getValueAtIndex<float>(0), vt.getValueAtIndex<float>(1), vt.getValueAtIndex<float>(2));
+vec3 parseVector(JsonTree vec) {
+	return vec3(vec.getValueAtIndex<float>(0), vec.getValueAtIndex<float>(1), vec.getValueAtIndex<float>(2));
 }
 
-JsonTree serializeVector(string name, vec3 v) {
+JsonTree serializeVector(string name, vec3 vec) {
 	return JsonTree::makeArray(name)
-		.addChild(JsonTree("", v.x))
-		.addChild(JsonTree("", v.y))
-		.addChild(JsonTree("", v.z));
+		.addChild(JsonTree("", vec.x))
+		.addChild(JsonTree("", vec.y))
+		.addChild(JsonTree("", vec.z));
 }
 
 Projector parseProjectorParams(JsonTree const & params) {
