@@ -27,6 +27,7 @@ public:
 	// View-changing functions
 	Projector & moveTo(vec3 pos);
 	Projector & setUpsideDown(bool isUpsideDown = true);
+	Projector & setYRotation(float rotation);
 
 	// Projection-changing functions
 	// For changing the projector's zoom and cast angle, which affect fov and base angle values
@@ -44,6 +45,7 @@ public:
 	float getVertBaseAngle() const { return mVertBaseAngle; }
 	vec3 getPos() const { return mPosition; }
 	bool getUpsideDown() const { return mUpsideDown; }
+	float getYRotation() const { return mYRotation; }
 
 	void draw();
 
@@ -67,6 +69,7 @@ private:
 	// 3D position and orientation properties of the Projector's lens, here abstracted as a point in space
 	vec3 mPosition = vec3(0, 0, 1); // Position
 	bool mUpsideDown = false;
+	float mYRotation = 0; // rotation around the Projector's y-axis, to account for offsets from center
 
 	// Properties of the projector's beam, used to determine the shape of the projector's projection frustum
 	// Horizontal FOV

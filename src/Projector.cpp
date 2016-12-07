@@ -28,6 +28,12 @@ Projector & Projector::setUpsideDown(bool isUpsideDown) {
 	return *this;
 }
 
+Projector & Projector::setYRotation(float rotation) {
+	mYRotation = rotation;
+	mViewMatrixCached = false;
+	return *this;
+}
+
 Projector & Projector::setHorFOV(float fov) {
 	mHorFOV = fov;
 	setProjectionMatrixDirty();
@@ -107,7 +113,7 @@ void Projector::calcViewMatrix() {
 	// mPosition is considered a triple of (distance from center, y-position in space, angle about center)
 	// The projector is always "looking at" the nearest y-axis point
 	vec3 projWorldPosition(cos(mPosition.z) * mPosition.x, mPosition.y, sin(mPosition.z) * mPosition.x);
-	mViewMatrix = glm::lookAt(projWorldPosition, vec3(0, mPosition.y, 0), mUpsideDown ? vec3(0, -1, 0) : vec3(0, 1, 0));
+	mViewMatrix = glm::eulerAngleY(mYRotation) * glm::lookAt(projWorldPosition, vec3(0, mPosition.y, 0), mUpsideDown ? vec3(0, -1, 0) : vec3(0, 1, 0));
 	mViewMatrixCached = true;
 }
 

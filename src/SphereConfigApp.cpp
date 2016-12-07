@@ -301,6 +301,12 @@ void SphereConfigApp::initializeControls() {
 			return mExteriorConfig.projectors[i].getUpsideDown();
 		});
 
+		mParams->addParam<float>(projectorName + " Y Rotation", [this, i] (float rotation) {
+			mExteriorConfig.projectors[i].setYRotation(rotation);
+		}, [this, i] () {
+			return mExteriorConfig.projectors[i].getYRotation();
+		}).min(-M_PI / 2).max(M_PI / 2).precision(4).step(0.001f);
+
 		mParams->addParam<float>(projectorName + " Horizontal FoV", [this, i] (float fov) {
 			mExteriorConfig.projectors[i].setHorFOV(fov);
 		}, [this, i] () {
@@ -364,7 +370,8 @@ Projector parseProjectorParams(JsonTree const & params) {
 		.setVertFOV(params.getValueForKey<float>("vertFOV"))
 		.setVertBaseAngle(params.getValueForKey<float>("baseAngle"))
 		.moveTo(parseVector(params.getChild("position")))
-		.setUpsideDown(params.getValueForKey<bool>("isUpsideDown"));
+		.setUpsideDown(params.getValueForKey<bool>("isUpsideDown"))
+		.setYRotation(params.getValueForKey<float>("yRotation"));
 }
 
 JsonTree serializeProjector(Projector const & proj) {
@@ -373,7 +380,8 @@ JsonTree serializeProjector(Projector const & proj) {
 		.addChild(JsonTree("vertFOV", proj.getVertFOV()))
 		.addChild(JsonTree("baseAngle", proj.getVertBaseAngle()))
 		.addChild(serializeVector("position", proj.getPos()))
-		.addChild(JsonTree("isUpsideDown", proj.getUpsideDown()));
+		.addChild(JsonTree("isUpsideDown", proj.getUpsideDown()))
+		.addChild(JsonTree("yRotation", proj.getYRotation()));
 }
 
 void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior) {
