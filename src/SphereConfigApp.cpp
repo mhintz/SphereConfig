@@ -34,7 +34,7 @@ struct InteriorConfig {
 
 struct ExteriorConfig {
 	float sphereApexHeight = 2.5;
-	float sphereScale = 1.0;
+	float sphereDiameter = 1.0;
 	vector<Projector> projectors = {
 		Projector().moveTo(vec3(5.0, 0, 0)),
 		Projector().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)),
@@ -105,8 +105,9 @@ void SphereConfigApp::setup()
 	initializeControls();
 
 	// Setup graticule mesh
-	// Move the center down by 1 so that it can be positioned from the top point
-	mGraticuleMesh = bmeshToVBOMesh(bmesh::makeGraticule(vec3(0, -1.0, 0), 1.0f));
+	// Move the center down so that it can be positioned from the top point
+	float meshDefaultRadius = 0.5f;
+	mGraticuleMesh = bmeshToVBOMesh(bmesh::makeGraticule(vec3(0, -meshDefaultRadius, 0), meshDefaultRadius));
 
 	// Exterior view
 	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
@@ -120,7 +121,7 @@ void SphereConfigApp::setup()
 	mMinSidePixels = min(displaySize.x, displaySize.y);
 
 	mInteriorCamera = CameraPersp(mMinSidePixels, mMinSidePixels, 35, 0.001f, 10.f);
-	mInteriorCamera.lookAt(vec3(0, 0, 0), vec3(0, -1, 0), vec3(0, 0, 1));
+	mInteriorCamera.lookAt(vec3(0, 0, 0), vec3(0, -meshDefaultRadius, 0), vec3(0, 0, 1));
 
 	// Set up interior distortion rendering
 	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
@@ -201,8 +202,8 @@ void SphereConfigApp::draw()
 
 		{
 			gl::ScopedMatrices innerScope;
-			gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
-			gl::scale(vec3(mExteriorConfig.sphereScale));
+			gl::translate(0, mExteriorConfig.sphereDiameter, 0);
+			gl::scale(vec3(mExteriorConfig.sphereDiameter));
 			gl::draw(mGraticuleMesh);
 		}
 
@@ -224,8 +225,8 @@ void SphereConfigApp::draw()
 		gl::setViewMatrix(viewProjector.getViewMatrix());
 		gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
 
-		gl::translate(0, mExteriorConfig.sphereApexHeight, 0);
-		gl::scale(vec3(mExteriorConfig.sphereScale));
+		gl::translate(0, mExteriorConfig.sphereDiameter, 0);
+		gl::scale(vec3(mExteriorConfig.sphereDiameter));
 
 		{
 			gl::ScopedColor scpColor(0, 0, 0);
@@ -325,9 +326,9 @@ void SphereConfigApp::initializeControls() {
 		"Projector 1", "Projector 2", "Projector 3"
 	}, & mExteriorConfig.projectorPov);
 
-	mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(0.0).max(6.0).precision(2).step(0.01f);
+	mParams->addParam("Sphere Diameter", & mExteriorConfig.sphereDiameter).min(0.01).max(5.0).precision(4).step(0.01);
 
-	mParams->addParam("Sphere Scale", & mExteriorConfig.sphereScale).min(0.01).max(5.0).precision(4).step(0.01);
+	// mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(0.0).max(6.0).precision(2).step(0.01f);
 
 	mParams->addSeparator();
 
