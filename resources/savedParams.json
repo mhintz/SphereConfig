@@ -27,5 +27,6 @@
          "yRotation" : 0
       }
    ],
-   "sphereApexHeight" : 2.4200000762939453
+   "sphereApexHeight" : 2.4200000762939453,
+   "sphereDiameter" : 1.5
 }

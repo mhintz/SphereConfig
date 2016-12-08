@@ -387,6 +387,7 @@ void loadParams(InteriorConfig * interior, ExteriorConfig * exterior) {
 		exterior->projectors[1] = parseProjectorParams(params.getChild("projectors").getChild(1));
 		exterior->projectors[2] = parseProjectorParams(params.getChild("projectors").getChild(2));
 
+		exterior->sphereDiameter = params.getValueForKey<float>("sphereDiameter");
 		exterior->sphereApexHeight = params.getValueForKey<float>("sphereApexHeight");
 
 		// Interior config stuff
@@ -442,6 +443,7 @@ void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior
 			.addChild(serializeProjector(exterior.projectors[1]))
 			.addChild(serializeProjector(exterior.projectors[2]))
 	);
+	appParams.addChild(JsonTree("sphereDiameter", exterior.sphereDiameter));
 	appParams.addChild(JsonTree("sphereApexHeight", exterior.sphereApexHeight));
 
 	string serializedParams = appParams.serialize();
