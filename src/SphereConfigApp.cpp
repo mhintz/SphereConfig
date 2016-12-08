@@ -150,6 +150,25 @@ void SphereConfigApp::update()
 	mInteriorDistortionShader->uniform("distortionPow", mInteriorConfig.distortionPower);
 }
 
+void drawRectInPlace(float thickness, float length) {
+	gl::drawSolidRect(Rectf(-thickness, -thickness, length + thickness, thickness));
+}
+
+void drawArrow(float thickness, float length, bool pointsRight=true) {
+	float offset = sqrt(length * length / 2);
+
+	gl::pushModelMatrix();
+		if (pointsRight) { gl::translate(-offset, -offset); }
+		gl::rotate(M_PI / 4);
+		drawRectInPlace(thickness, length);
+	gl::popModelMatrix();
+	gl::pushModelMatrix();
+		if (pointsRight) { gl::translate(-offset, offset); }
+		gl::rotate(-M_PI / 4);
+		drawRectInPlace(thickness, length);
+	gl::popModelMatrix();
+}
+
 void SphereConfigApp::draw()
 {
 	if (mConfigMode == ConfigMode::Interior) {	
@@ -221,23 +240,49 @@ void SphereConfigApp::draw()
 		gl::clear(Color(1, 0, 0));
 
 		gl::ScopedMatrices scpMat;
-
+		gl::setMatricesWindow(getWindowSize());
 		vec2 size = vec2(getWindowSize());
-		float diagonal = atan2(size.y, size.x);
-		float diagonalLength = sqrt(pow(size.x, 2) + pow(size.y, 2));
-
-		gl::setMatricesWindow(size.x, size.y);
 		gl::ScopedColor scpColor(Color(1, 1, 1));
 
+		float diagonalAngle = atan2(size.y, size.x);
+		float diagonalLength = length(size);
+		float diagonalThickness = 2;
+		int numTicks = 20;
+		float tickLength = 25;
+
 		gl::pushModelMatrix();
-			gl::rotate(diagonal);
-			gl::drawSolidRect(Rectf(-20, -20, diagonalLength + 20, 20));
+
+			gl::translate(vec2(0, 0));
+			gl::rotate(diagonalAngle);
+			drawRectInPlace(diagonalThickness, diagonalLength);
+
+			for (int i = 0; i < numTicks; i++) {
+				gl::pushModelMatrix();
+					float tval = (float) i / (float) (numTicks - 1);
+					vec2 position = lerp(vec2(0, 0), vec2(diagonalLength, 0), tval);
+					gl::translate(position);
+					drawArrow(diagonalThickness, tickLength, tval <= 0.5);
+				gl::popModelMatrix();
+			}
+
 		gl::popModelMatrix();
 
 		gl::pushModelMatrix();
-			gl::translate(0, size.y);
-			gl::rotate(-diagonal);
-			gl::drawSolidRect(Rectf(-20, -20, diagonalLength + 20, 20));
+
+			gl::translate(vec2(0, size.y));
+			gl::rotate(-diagonalAngle);
+
+			drawRectInPlace(diagonalThickness, diagonalLength);
+
+			for (int i = 0; i < numTicks; i++) {
+				gl::pushModelMatrix();
+					float tval = (float) i / (float) (numTicks - 1);
+					vec2 position = lerp(vec2(0, 0), vec2(diagonalLength, 0), tval);
+					gl::translate(position);
+					drawArrow(diagonalThickness, tickLength, tval <= 0.5);
+				gl::popModelMatrix();
+			}
+
 		gl::popModelMatrix();
 	} else if (mConfigMode == ConfigMode::ProjectorOff) {
 		// Dark screen, for helping configure other projectors
