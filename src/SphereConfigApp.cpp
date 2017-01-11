@@ -109,12 +109,13 @@ void SphereConfigApp::setup()
 	float meshDefaultRadius = 0.5f;
 	mGraticuleMesh = bmeshToVBOMesh(bmesh::makeGraticule(vec3(0, -meshDefaultRadius, 0), meshDefaultRadius));
 
+	mSolidSphereMesh = gl::VboMesh::create(geom::Sphere().center(vec3(0, -meshDefaultRadius, 0)).radius(meshDefaultRadius), { geom::POSITION });
+	mZBiasShader = gl::GlslProg::create(loadResource("zBias_v.glsl"), loadResource("passThrough_f.glsl"));
+
 	// Exterior view
 	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
 	mExteriorUiCamera = CameraUi(& mExteriorCamera, getWindow());
-	mSolidSphereMesh = gl::VboMesh::create(geom::Sphere().center(vec3(0, -1, 0)).radius(1.0f), { geom::POSITION });
-	mZBiasShader = gl::GlslProg::create(loadResource("zBias_v.glsl"), loadResource("passThrough_f.glsl"));
 
 	// Interior view
 	ivec2 displaySize = toPixels(getWindowSize());
