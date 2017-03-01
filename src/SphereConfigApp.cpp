@@ -9,6 +9,8 @@
 #include "cinder/params/Params.h"
 #include "cinder/Display.h"
 #include "cinder/Json.h"
+#include "cinder/TriMesh.h"
+#include "cinder/ObjLoader.h"
 
 #include "buildmesh.h"
 #include "MeshHelpers.h"
@@ -64,7 +66,7 @@ class SphereConfigApp : public App {
 	params::InterfaceGlRef mParams;
 	ConfigMode mConfigMode = ConfigMode::Exterior;
 	gl::VboMeshRef mGraticuleMesh;
-	gl::VboMeshRef mSolidSphereMesh;
+	gl::VboMeshRef mScanSphereMesh;
 
 	// Interior mode stuff
 	CameraPersp mInteriorCamera;
@@ -77,7 +79,6 @@ class SphereConfigApp : public App {
 	CameraPersp mExteriorCamera;
 	CameraUi mExteriorUiCamera;
 	ExteriorConfig mExteriorConfig;
-	gl::GlslProgRef mZBiasShader;
 };
 
 static int const INTERIOR_DISTORTION_TEX_BIND_POINT = 0;
@@ -109,9 +110,6 @@ void SphereConfigApp::setup()
 	float meshDefaultRadius = 0.5f;
 	mGraticuleMesh = bmeshToVBOMesh(bmesh::makeGraticule(vec3(0, -meshDefaultRadius, 0), meshDefaultRadius));
 
-	mSolidSphereMesh = gl::VboMesh::create(geom::Sphere().center(vec3(0, -meshDefaultRadius, 0)).radius(meshDefaultRadius), { geom::POSITION });
-	mZBiasShader = gl::GlslProg::create(loadResource("zBias_v.glsl"), loadResource("passThrough_f.glsl"));
-
 	// Exterior view
 	mExteriorCamera.lookAt(vec3(0, 0, 10), vec3(0), vec3(0, 1, 0));
 	mExteriorCamera.setAspectRatio(getWindowAspectRatio());
@@ -128,6 +126,9 @@ void SphereConfigApp::setup()
 	mInteriorDistortionFbo = gl::Fbo::create(mMinSidePixels, mMinSidePixels);
 	mInteriorDistortionShader = gl::GlslProg::create(loadResource("passThrough_v.glsl"), loadResource("distortion_f.glsl"));
 	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
+
+	ObjLoader meshLoader(loadAsset("sphere_scan_edited_first_test.obj"));
+	mScanSphereMesh = gl::VboMesh::create(meshLoader);
 }
 
 void SphereConfigApp::mouseDown( MouseEvent event )
@@ -203,9 +204,16 @@ void SphereConfigApp::draw()
 
 		{
 			gl::ScopedMatrices innerScope;
-			gl::translate(0, mExteriorConfig.sphereDiameter, 0);
-			gl::scale(vec3(mExteriorConfig.sphereDiameter));
-			gl::draw(mGraticuleMesh);
+			gl::ScopedPolygonMode scpMode(GL_LINE);
+
+			// Draw the scanned sphere mesh
+			gl::color(1.0, 0.0, 0.0);
+			gl::draw(mScanSphereMesh);
+
+			// Draw a 1x1x1 meter cube for scale
+			gl::translate(0, 0.5, 0);
+			gl::color(0, 1, 0);
+			gl::draw(geom::Cube().size(1, 1, 1));
 		}
 
 		{
@@ -214,6 +222,7 @@ void SphereConfigApp::draw()
 			gl::draw(geom::WirePlane().subdivisions(ivec2(10, 10)).size(vec2(10.0, 10.0)));
 		}
 
+		// Draw all the projectors
 		for (auto & proj : mExteriorConfig.projectors) {
 			proj.draw();
 		}
@@ -226,18 +235,9 @@ void SphereConfigApp::draw()
 		gl::setViewMatrix(viewProjector.getViewMatrix());
 		gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
 
-		gl::translate(0, mExteriorConfig.sphereDiameter, 0);
-		gl::scale(vec3(mExteriorConfig.sphereDiameter));
-
-		{
-			gl::ScopedColor scpColor(0, 0, 0);
-			gl::draw(mSolidSphereMesh);
-		}
-
-		{
-			gl::ScopedGlslProg scpShader(mZBiasShader);
-			gl::draw(mGraticuleMesh);
-		}
+		gl::ScopedPolygonMode scpPolyMode(GL_LINE);
+		gl::ScopedColor scpColor(1, 0, 0);
+		gl::draw(mScanSphereMesh);
 	} else if (mConfigMode == ConfigMode::ProjectorAlignment) {
 		gl::clear(Color(1, 0, 0));
 
