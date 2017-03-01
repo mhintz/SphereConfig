@@ -24,6 +24,8 @@ public:
 	Projector(float horFOV, float vertFOV, float baseAngle)
 	: mHorFOV(horFOV), mVertFOV(vertFOV), mVertBaseAngle(baseAngle) {}
 
+	void setColor(ci::Color col);
+
 	// View-changing functions
 	Projector & moveTo(vec3 pos);
 	Projector & setUpsideDown(bool isUpsideDown = true);
@@ -80,6 +82,8 @@ private:
 	// Measured as the angle between the projector's base level and the bottom of the projected image.
 	// I believe that for all projectors and projector setings, this is at least 0.
 	float mVertBaseAngle;
+
+	ci::Color mColor = ci::Color::white();
 };
 
 // Returns configuration for an Acer P5515 projector at minimum "zoom" setting

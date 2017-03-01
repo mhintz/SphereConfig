@@ -99,6 +99,7 @@ void SphereConfigApp::setup()
 
 	// Load parameters from saved file
 	loadParams(& mInteriorConfig, & mExteriorConfig);
+	// mExteriorConfig.projectors[0] = getAcerP5515MinZoom().moveTo(mExteriorConfig.projectors[0].getPos());
 	// mExteriorConfig.projectors[1] = getAcerP3251MinZoom().moveTo(mExteriorConfig.projectors[1].getPos());
 
 	// Setup params
@@ -385,8 +386,11 @@ void loadParams(InteriorConfig * interior, ExteriorConfig * exterior) {
 		JsonTree params(loadResource(PARAMS_FILE_LOCATION));
 
 		exterior->projectors[0] = parseProjectorParams(params.getChild("projectors").getChild(0));
+		exterior->projectors[0].setColor(Color(1.0, 1.0, 0.0));
 		exterior->projectors[1] = parseProjectorParams(params.getChild("projectors").getChild(1));
+		exterior->projectors[1].setColor(Color(0.0, 1.0, 1.0));
 		exterior->projectors[2] = parseProjectorParams(params.getChild("projectors").getChild(2));
+		exterior->projectors[2].setColor(Color(1.0, 0.0, 1.0));
 
 		exterior->sphereDiameter = params.getValueForKey<float>("sphereDiameter");
 		exterior->sphereApexHeight = params.getValueForKey<float>("sphereApexHeight");
