@@ -204,14 +204,14 @@ void Projector::calcPolyline() {
 }
 
 Projector getAcerP5515MinZoom() {
-	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.04);
+	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.38);
 	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.78, 0.90);
 	return Projector(hfov, vertAngles[0], vertAngles[1]);
 }
 
 Projector getAcerP5515MaxZoom() {
-	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.25);
-	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 0.94, 1.08);
+	auto hfov = Projector::horizontalAngleFromDims(2.0, 1.87);
+	auto vertAngles = Projector::verticalAnglesFromHeights(2.0, 1.05, 1.22);
 	return Projector(hfov, vertAngles[0], vertAngles[1]);
 }
 
