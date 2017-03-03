@@ -35,8 +35,7 @@ struct InteriorConfig {
 };
 
 struct ExteriorConfig {
-	float sphereApexHeight = 2.5;
-	float sphereDiameter = 1.0;
+	bool renderWireframe = false;
 	vector<Projector> projectors = {
 		Projector().moveTo(vec3(5.0, 0, 0)),
 		Projector().moveTo(vec3(5.0, 0, 2 * M_PI * 1 / 3)),
@@ -67,6 +66,7 @@ class SphereConfigApp : public App {
 	ConfigMode mConfigMode = ConfigMode::Exterior;
 	gl::VboMeshRef mGraticuleMesh;
 	gl::VboMeshRef mScanSphereMesh;
+	gl::TextureRef mScanSphereTexture;
 
 	// Interior mode stuff
 	CameraPersp mInteriorCamera;
@@ -128,8 +128,9 @@ void SphereConfigApp::setup()
 	mInteriorDistortionShader = gl::GlslProg::create(loadResource("passThrough_v.glsl"), loadResource("distortion_f.glsl"));
 	mInteriorDistortionShader->uniform("uTex0", INTERIOR_DISTORTION_TEX_BIND_POINT);
 
-	ObjLoader meshLoader(loadAsset("sphere_scan_edited_first_test.obj"));
+	ObjLoader meshLoader(loadAsset("sphere_scan_2017_03_02/sphere_scan_2017_03_02_edited.obj"));
 	mScanSphereMesh = gl::VboMesh::create(meshLoader);
+	mScanSphereTexture = gl::Texture::create(loadImage(loadAsset("sphere_scan_2017_03_02/sphere_scan_2017_03_02.png")));
 }
 
 void SphereConfigApp::mouseDown( MouseEvent event )
@@ -203,17 +204,23 @@ void SphereConfigApp::draw()
 		gl::ScopedMatrices scpMat;
 		gl::setMatrices(mExteriorCamera);
 
+		// Draw the scanned sphere mesh
+		if (mExteriorConfig.renderWireframe) {
+			gl::ScopedPolygonMode scpMode(GL_LINE);
+			gl::ScopedColor scpColor(1.0, 0.0, 0.0);
+			gl::draw(mScanSphereMesh);
+		} else {
+			gl::ScopedTextureBind scpTex(mScanSphereTexture);
+			gl::ScopedGlslProg scpShader(gl::getStockShader(gl::ShaderDef().texture(mScanSphereTexture)));
+			gl::draw(mScanSphereMesh);
+		}
+
 		{
 			gl::ScopedMatrices innerScope;
 			gl::ScopedPolygonMode scpMode(GL_LINE);
-
-			// Draw the scanned sphere mesh
-			gl::color(1.0, 0.0, 0.0);
-			gl::draw(mScanSphereMesh);
-
 			// Draw a 1x1x1 meter cube for scale
 			gl::translate(0, 0.5, 0);
-			gl::color(0, 1, 0);
+			gl::ScopedColor scpColor(0, 1, 0);
 			gl::draw(geom::Cube().size(1, 1, 1));
 		}
 
@@ -236,9 +243,15 @@ void SphereConfigApp::draw()
 		gl::setViewMatrix(viewProjector.getViewMatrix());
 		gl::setProjectionMatrix(viewProjector.getProjectionMatrix());
 
-		gl::ScopedPolygonMode scpPolyMode(GL_LINE);
-		gl::ScopedColor scpColor(1, 0, 0);
-		gl::draw(mScanSphereMesh);
+		if (mExteriorConfig.renderWireframe) {
+			gl::ScopedPolygonMode scpMode(GL_LINE);
+			gl::ScopedColor scpColor(1, 0, 0);
+			gl::draw(mScanSphereMesh);
+		} else {
+			gl::ScopedTextureBind scpTex(mScanSphereTexture);
+			gl::ScopedGlslProg scpShader(gl::getStockShader(gl::ShaderDef().texture(mScanSphereTexture)));
+			gl::draw(mScanSphereMesh);
+		}
 	} else if (mConfigMode == ConfigMode::ProjectorAlignment) {
 		gl::clear(Color(1, 0, 0));
 
@@ -328,9 +341,7 @@ void SphereConfigApp::initializeControls() {
 		"Projector 1", "Projector 2", "Projector 3"
 	}, & mExteriorConfig.projectorPov);
 
-	mParams->addParam("Sphere Diameter", & mExteriorConfig.sphereDiameter).min(0.01).max(5.0).precision(4).step(0.01);
-
-	// mParams->addParam("Sphere Apex Height", & mExteriorConfig.sphereApexHeight).min(0.0).max(6.0).precision(2).step(0.01f);
+	mParams->addParam("Render Wireframe", & mExteriorConfig.renderWireframe);
 
 	mParams->addSeparator();
 
@@ -392,9 +403,6 @@ void loadParams(InteriorConfig * interior, ExteriorConfig * exterior) {
 		exterior->projectors[2] = parseProjectorParams(params.getChild("projectors").getChild(2));
 		exterior->projectors[2].setColor(Color(1.0, 0.0, 1.0));
 
-		exterior->sphereDiameter = params.getValueForKey<float>("sphereDiameter");
-		exterior->sphereApexHeight = params.getValueForKey<float>("sphereApexHeight");
-
 		// Interior config stuff
 		interior->cameraFov = params.getChild("fov").getValue<float>();
 		interior->distortionPower = params.getChild("distortionPower").getValue<float>();
@@ -448,8 +456,6 @@ void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior
 			.addChild(serializeProjector(exterior.projectors[1]))
 			.addChild(serializeProjector(exterior.projectors[2]))
 	);
-	appParams.addChild(JsonTree("sphereDiameter", exterior.sphereDiameter));
-	appParams.addChild(JsonTree("sphereApexHeight", exterior.sphereApexHeight));
 
 	string serializedParams = appParams.serialize();
 	std::ofstream writeFile;
