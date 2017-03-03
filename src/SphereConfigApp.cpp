@@ -352,7 +352,7 @@ void SphereConfigApp::initializeControls() {
 			mExteriorConfig.projectors[i].moveTo(projPos);
 		}, [this, i] () {
 			return mExteriorConfig.projectors[i].getPos();
-		});
+		}).precision(4).step(0.001f);
 
 		mParams->addParam<bool>(projectorName + " Flipped", [this, i] (bool isFlipped) {
 			mExteriorConfig.projectors[i].setUpsideDown(isFlipped);
