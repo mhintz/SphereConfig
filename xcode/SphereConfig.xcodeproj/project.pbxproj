@@ -24,7 +24,6 @@
 		EF0FC1321DF4D87C00AA0EA6 /* distortion_f.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC12E1DF4D87C00AA0EA6 /* distortion_f.glsl */; };
 		EF0FC1331DF4D87C00AA0EA6 /* passThrough_f.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC12F1DF4D87C00AA0EA6 /* passThrough_f.glsl */; };
 		EF0FC1341DF4D87C00AA0EA6 /* passThrough_v.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC1301DF4D87C00AA0EA6 /* passThrough_v.glsl */; };
-		EF0FC1351DF4D87C00AA0EA6 /* zBias_v.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC1311DF4D87C00AA0EA6 /* zBias_v.glsl */; };
 		EF6936A31DE75DE40010239C /* savedParams.json in Resources */ = {isa = PBXBuildFile; fileRef = EF6936A21DE75DE40010239C /* savedParams.json */; };
 		EF7B8F4D1DEC8C73008D2A73 /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F451DEC8C73008D2A73 /* Mesh.cpp */; };
 		EF7B8F4E1DEC8C73008D2A73 /* MeshBuilds.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F471DEC8C73008D2A73 /* MeshBuilds.cpp */; };
@@ -293,7 +292,6 @@
 			files = (
 				EF0FC1341DF4D87C00AA0EA6 /* passThrough_v.glsl in Resources */,
 				FB078F37B81A492FB10BB59D /* CinderApp.icns in Resources */,
-				EF0FC1351DF4D87C00AA0EA6 /* zBias_v.glsl in Resources */,
 				EF0FC1321DF4D87C00AA0EA6 /* distortion_f.glsl in Resources */,
 				EF6936A31DE75DE40010239C /* savedParams.json in Resources */,
 				EF0FC1331DF4D87C00AA0EA6 /* passThrough_f.glsl in Resources */,
