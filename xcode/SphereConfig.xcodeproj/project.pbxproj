@@ -19,7 +19,6 @@
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		94357166F1B2424686BFA6B0 /* SphereConfigApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BA37B80FE54D4BBCAF0F9BC2 /* SphereConfigApp.cpp */; };
-		EF0FC1221DF0F89E00AA0EA6 /* Projector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF0FC1201DF0F89E00AA0EA6 /* Projector.cpp */; };
 		EF0FC1281DF0FA3600AA0EA6 /* CoreMath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF0FC1241DF0FA3600AA0EA6 /* CoreMath.cpp */; };
 		EF0FC1321DF4D87C00AA0EA6 /* distortion_f.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC12E1DF4D87C00AA0EA6 /* distortion_f.glsl */; };
 		EF0FC1331DF4D87C00AA0EA6 /* passThrough_f.glsl in Resources */ = {isa = PBXBuildFile; fileRef = EF0FC12F1DF4D87C00AA0EA6 /* passThrough_f.glsl */; };
@@ -31,6 +30,8 @@
 		EF7B8F501DEC8C73008D2A73 /* Vertex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F4B1DEC8C73008D2A73 /* Vertex.cpp */; };
 		EF7B8F611DEC8EFE008D2A73 /* GeomEater.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F5C1DEC8EFE008D2A73 /* GeomEater.cpp */; };
 		EF7B8F731DEC9C94008D2A73 /* MeshHelpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EF7B8F711DEC9C94008D2A73 /* MeshHelpers.cpp */; };
+		EFE6964C1E6BD26D00CD4E51 /* FboCubeMapLayered.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFE696481E6BD26D00CD4E51 /* FboCubeMapLayered.cpp */; };
+		EFE6964D1E6BD26D00CD4E51 /* Projector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EFE6964A1E6BD26D00CD4E51 /* Projector.cpp */; };
 		FB078F37B81A492FB10BB59D /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 9B4CB8864DFD4A3E8C80C2C0 /* CinderApp.icns */; };
 /* End PBXBuildFile section */
 
@@ -54,8 +55,6 @@
 		BA37B80FE54D4BBCAF0F9BC2 /* SphereConfigApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = SphereConfigApp.cpp; path = ../src/SphereConfigApp.cpp; sourceTree = "<group>"; };
 		CD813987BEF84552A004F672 /* SphereConfig_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = SphereConfig_Prefix.pch; sourceTree = "<group>"; };
 		E71416FCDD2340C09D42EC37 /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
-		EF0FC1201DF0F89E00AA0EA6 /* Projector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Projector.cpp; path = ../src/Projector.cpp; sourceTree = "<group>"; };
-		EF0FC1211DF0F89E00AA0EA6 /* Projector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Projector.h; path = ../src/Projector.h; sourceTree = "<group>"; };
 		EF0FC1231DF0FA2300AA0EA6 /* MathBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MathBase.h; path = ../../../cpp/buildmesh/MathBase.h; sourceTree = "<group>"; };
 		EF0FC1241DF0FA3600AA0EA6 /* CoreMath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoreMath.cpp; path = "../../../cinder/blocks/core-util/CoreMath.cpp"; sourceTree = "<group>"; };
 		EF0FC1251DF0FA3600AA0EA6 /* CoreMath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoreMath.h; path = "../../../cinder/blocks/core-util/CoreMath.h"; sourceTree = "<group>"; };
@@ -81,6 +80,10 @@
 		EF7B8F601DEC8EFE008D2A73 /* NoiseWalker.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = NoiseWalker.hpp; path = "../../../cinder/blocks/core-util/NoiseWalker.hpp"; sourceTree = "<group>"; };
 		EF7B8F711DEC9C94008D2A73 /* MeshHelpers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MeshHelpers.cpp; path = "../../../cinder/blocks/core-util/MeshHelpers.cpp"; sourceTree = "<group>"; };
 		EF7B8F721DEC9C94008D2A73 /* MeshHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MeshHelpers.h; path = "../../../cinder/blocks/core-util/MeshHelpers.h"; sourceTree = "<group>"; };
+		EFE696481E6BD26D00CD4E51 /* FboCubeMapLayered.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FboCubeMapLayered.cpp; path = "../../../cinder/blocks/core-util/FboCubeMapLayered.cpp"; sourceTree = "<group>"; };
+		EFE696491E6BD26D00CD4E51 /* FboCubeMapLayered.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FboCubeMapLayered.h; path = "../../../cinder/blocks/core-util/FboCubeMapLayered.h"; sourceTree = "<group>"; };
+		EFE6964A1E6BD26D00CD4E51 /* Projector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Projector.cpp; path = "../../../cinder/blocks/core-util/Projector.cpp"; sourceTree = "<group>"; };
+		EFE6964B1E6BD26D00CD4E51 /* Projector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Projector.h; path = "../../../cinder/blocks/core-util/Projector.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,8 +119,6 @@
 			isa = PBXGroup;
 			children = (
 				BA37B80FE54D4BBCAF0F9BC2 /* SphereConfigApp.cpp */,
-				EF0FC1201DF0F89E00AA0EA6 /* Projector.cpp */,
-				EF0FC1211DF0F89E00AA0EA6 /* Projector.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -224,6 +225,10 @@
 		EF7B8F621DEC8F03008D2A73 /* core-util */ = {
 			isa = PBXGroup;
 			children = (
+				EFE696481E6BD26D00CD4E51 /* FboCubeMapLayered.cpp */,
+				EFE696491E6BD26D00CD4E51 /* FboCubeMapLayered.h */,
+				EFE6964A1E6BD26D00CD4E51 /* Projector.cpp */,
+				EFE6964B1E6BD26D00CD4E51 /* Projector.h */,
 				EF0FC1241DF0FA3600AA0EA6 /* CoreMath.cpp */,
 				EF0FC1251DF0FA3600AA0EA6 /* CoreMath.h */,
 				EF0FC1261DF0FA3600AA0EA6 /* Gradient.hpp */,
@@ -307,13 +312,14 @@
 			files = (
 				EF7B8F731DEC9C94008D2A73 /* MeshHelpers.cpp in Sources */,
 				EF7B8F4D1DEC8C73008D2A73 /* Mesh.cpp in Sources */,
-				EF0FC1221DF0F89E00AA0EA6 /* Projector.cpp in Sources */,
 				94357166F1B2424686BFA6B0 /* SphereConfigApp.cpp in Sources */,
 				EF7B8F501DEC8C73008D2A73 /* Vertex.cpp in Sources */,
+				EFE6964D1E6BD26D00CD4E51 /* Projector.cpp in Sources */,
 				EF7B8F611DEC8EFE008D2A73 /* GeomEater.cpp in Sources */,
 				EF0FC1281DF0FA3600AA0EA6 /* CoreMath.cpp in Sources */,
 				EF7B8F4F1DEC8C73008D2A73 /* MeshGroup.cpp in Sources */,
 				EF7B8F4E1DEC8C73008D2A73 /* MeshBuilds.cpp in Sources */,
+				EFE6964C1E6BD26D00CD4E51 /* FboCubeMapLayered.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

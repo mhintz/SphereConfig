@@ -424,6 +424,17 @@ JsonTree serializeVector(string name, vec3 vec) {
 		.addChild(JsonTree("", vec.z));
 }
 
+Color parseColor(JsonTree color) {
+	return Color(color.getValueAtIndex<float>(0), color.getValueAtIndex<float>(1), color.getValueAtIndex<float>(2));
+}
+
+JsonTree serializeColor(string name, Color color) {
+	return JsonTree::makeArray(name)
+		.addChild(JsonTree("", color.r))
+		.addChild(JsonTree("", color.g))
+		.addChild(JsonTree("", color.b));
+}
+
 Projector parseProjectorParams(JsonTree const & params) {
 	return Projector()
 		.setHorFOV(params.getValueForKey<float>("horFOV"))
@@ -431,7 +442,8 @@ Projector parseProjectorParams(JsonTree const & params) {
 		.setVertBaseAngle(params.getValueForKey<float>("baseAngle"))
 		.moveTo(parseVector(params.getChild("position")))
 		.setUpsideDown(params.getValueForKey<bool>("isUpsideDown"))
-		.setYRotation(params.getValueForKey<float>("yRotation"));
+		.setYRotation(params.getValueForKey<float>("yRotation"))
+		.setColor(parseColor(params.getChild("color")));
 }
 
 JsonTree serializeProjector(Projector const & proj) {
@@ -441,7 +453,8 @@ JsonTree serializeProjector(Projector const & proj) {
 		.addChild(JsonTree("baseAngle", proj.getVertBaseAngle()))
 		.addChild(serializeVector("position", proj.getPos()))
 		.addChild(JsonTree("isUpsideDown", proj.getUpsideDown()))
-		.addChild(JsonTree("yRotation", proj.getYRotation()));
+		.addChild(JsonTree("yRotation", proj.getYRotation()))
+		.addChild(serializeColor("color", proj.getColor()));
 }
 
 void saveParams(InteriorConfig const & interior, ExteriorConfig const & exterior) {
